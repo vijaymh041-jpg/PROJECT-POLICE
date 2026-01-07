@@ -1,0 +1,142 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Reports & Export</h2>
+    <div>
+        <button class="btn btn-outline-primary me-2" onclick="location.reload()">
+            <i class="fas fa-sync-alt me-2"></i> Refresh
+        </button>
+    </div>
+</div>
+
+<!-- Report Statistics -->
+<div class="row mb-4">
+    <div class="col-md-3 mb-3">
+        <div class="card card-police stats-card">
+            <i class="fas fa-file-alt"></i>
+            <h3>{{ stats.total or 0 }}</h3>
+            <p>Total Incidents</p>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="card card-police stats-card">
+            <i class="fas fa-exclamation-triangle"></i>
+            <h3>{{ stats.active or 0 }}</h3>
+            <p>Active Incidents</p>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="card card-police stats-card">
+            <i class="fas fa-check-circle"></i>
+            <h3>{{ stats.resolved or 0 }}</h3>
+            <p>Resolved Incidents</p>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="card card-police stats-card">
+            <i class="fas fa-chart-line"></i>
+            <h3>{{ stats.high_severity or 0 }}</h3>
+            <p>High Severity</p>
+        </div>
+    </div>
+</div>
+
+<!-- Export Options -->
+<div class="row">
+    <div class="col-md-12">
+        <div class="card card-police">
+            <div class="card-header bg-white">
+                <h5 class="mb-0">Export Incidents</h5>
+            </div>
+            <div class="card-body">
+                <div class="text-center py-4">
+                    <i class="fas fa-file-export fa-4x text-primary mb-4"></i>
+                    <h3>Export Incident Reports</h3>
+                    <p class="text-muted lead">Download incident data in various formats</p>
+                    <p>Export comprehensive incident records from the SwiftAid database for analysis and reporting.</p>
+                </div>
+
+                <!-- Single Export Format Cards Section -->
+                <div class="row mt-4">
+                    <div class="col-md-4 mb-3">
+                        <div class="card h-100 text-center">
+                            <div class="card-body">
+                                <i class="fas fa-file-csv fa-3x text-success mb-3"></i>
+                                <h5>CSV Format</h5>
+                                <p class="text-muted">Comma-separated values for spreadsheet applications</p>
+                                <a href="{{ url_for('export_csv') }}" class="btn btn-success">
+                                    <i class="fas fa-download me-2"></i>Download CSV
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <div class="card h-100 text-center">
+                            <div class="card-body">
+                                <i class="fas fa-file-alt fa-3x text-danger mb-3"></i>
+                                <h5>PDF Format</h5>
+                                <p class="text-muted">Portable Document Format for printing and sharing</p>
+                                <a href="{{ url_for('export_pdf') }}" class="btn btn-danger">
+                                    <i class="fas fa-download me-2"></i>Download PDF
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <div class="card h-100 text-center">
+                            <div class="card-body">
+                                <i class="fas fa-file-excel fa-3x text-primary mb-3"></i>
+                                <h5>Excel Format</h5>
+                                <p class="text-muted">Microsoft Excel format for data analysis</p>
+                                <a href="{{ url_for('export_excel') }}" class="btn btn-primary">
+                                    <i class="fas fa-download me-2"></i>Download Excel
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Data Summary -->
+                <div class="mt-4 p-4 bg-light rounded">
+                    <h5>Database Summary</h5>
+                    <div class="row text-center">
+                        <div class="col-md-4">
+                            <div class="border rounded p-3 mb-3">
+                                <div class="text-primary fw-bold fs-4">{{ stats.total or 0 }}</div>
+                                <small>Total Incidents</small>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="border rounded p-3 mb-3">
+                                <div class="text-success fw-bold fs-4">{{ stats.resolved or 0 }}</div>
+                                <small>Resolved Cases</small>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="border rounded p-3 mb-3">
+                                <div class="text-warning fw-bold fs-4">{{ stats.high_severity or 0 }}</div>
+                                <small>High Severity</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="alert alert-info mt-3">
+                        <i class="fas fa-database me-2"></i>
+                        <strong>Data Source:</strong> MongoDB Atlas - SwiftAid Database
+                        <br>
+                        <small class="text-muted">Last updated: {{ current_time }}</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Reports page loaded with data from MongoDB');
+});
+</script>
+{% endblock %}

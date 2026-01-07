@@ -1,0 +1,945 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2 class="mb-4">SwiftAid Police Database - Davanagere</h2>
+
+<!-- Stats Overview - Same as dashboard -->
+<div class="row mb-4">
+    <div class="col-md-3 mb-3">
+        <div class="card card-police stats-card">
+            <i class="fas fa-exclamation-triangle"></i>
+            <h3>{{ total_incidents }}</h3>
+            <p>Total Incidents</p>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="card card-police stats-card">
+            <i class="fas fa-tasks"></i>
+            <h3>{{ user_incidents }}</h3>
+            <p>Assigned to You</p>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="card card-police stats-card">
+            <i class="fas fa-check-circle"></i>
+            <h3>{{ resolved_incidents }}</h3>
+            <p>Resolved Cases</p>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="card card-police stats-card">
+            <i class="fas fa-users"></i>
+            <h3>{{ active_officers }}</h3>
+            <p>Active Officers</p>
+        </div>
+    </div>
+</div>
+
+<!-- Add Officer Button in Top Right -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h4 class="mb-0"><i class="fas fa-database me-2"></i>Database Management</h4>
+    </div>
+    <div>
+        <button class="btn btn-success" onclick="showAddOfficerModal()">
+            <i class="fas fa-user-plus me-2"></i>Add Police Officer
+        </button>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Incidents List -->
+    <div class="col-md-6 mb-4">
+        <div class="card card-police">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Recent Incidents</h5>
+                <div>
+                    <button class="btn btn-sm btn-outline-primary me-2" onclick="loadRecentIncidents()">
+                        <i class="fas fa-sync-alt"></i>
+                    </button>
+                    <a href="{{ url_for('incidents') }}" class="btn btn-sm btn-police">View All</a>
+                </div>
+            </div>
+            <div class="card-body p-0">
+                <div class="list-group list-group-flush" id="incidentsList">
+                    {% for incident in incidents %}
+                    <div class="list-group-item list-group-item-action incident-item" 
+                         data-lat="{{ incident.latitude }}" 
+                         data-lng="{{ incident.longitude }}"
+                         data-id="{{ incident._id }}">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1">{{ incident.title }}</h6>
+                            <small class="text-muted">
+                                {% if incident.created_at %}
+                                    {{ incident.created_at.strftime('%H:%M') }}
+                                {% else %}
+                                    Unknown
+                                {% endif %}
+                            </small>
+                        </div>
+                        <p class="mb-1">
+                            {% if incident.description %}
+                                {{ incident.description[:100] }}...
+                            {% else %}
+                                No description available
+                            {% endif %}
+                        </p>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <small class="text-{{ 'danger' if incident.severity == 'high' else 'warning' if incident.severity == 'medium' else 'success' }}">
+                                <i class="fas fa-map-marker-alt me-1"></i> 
+                                {{ incident.address }}
+                            </small>
+                            <span class="badge bg-{{ 'danger' if incident.severity == 'high' else 'warning' if incident.severity == 'medium' else 'success' }}">
+                                {{ incident.severity|title }}
+                            </span>
+                        </div>
+                        <div class="mt-1">
+                            <small class="text-muted">
+                                Status: 
+                                <span class="badge bg-{{ 'primary' if incident.status == 'active' else 'success' if incident.status == 'resolved' else 'secondary' }}">
+                                    {{ incident.status|title }}
+                                </span>
+                                Source: 
+                                {% if incident.source == 'police' %}
+                                    <span class="badge bg-primary">Police</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">Public</span>
+                                {% endif %}
+                            </small>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="list-group-item text-center text-muted py-4">
+                        <i class="fas fa-inbox fa-2x mb-2"></i>
+                        <p>No incidents reported yet</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Map View -->
+    <div class="col-md-6 mb-4">
+        <div class="card card-police">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Live Incident Map - Davanagere</h5>
+                <button class="btn btn-sm btn-outline-primary" onclick="refreshMap()">
+                    <i class="fas fa-sync-alt"></i> Refresh
+                </button>
+            </div>
+            <div class="card-body p-0">
+                <div id="map" class="map-container"></div>
+                <div class="p-3 bg-light">
+                    <small class="text-muted">
+                        <i class="fas fa-info-circle me-1"></i>
+                        Click on incident markers for details. Total incidents on map: <span id="incidentCount">0</span>
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Database Actions -->
+    <div class="col-md-4 mb-4">
+        <div class="card card-police">
+            <div class="card-header bg-white">
+                <h5 class="mb-0"><i class="fas fa-cogs me-2"></i>Database Actions</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <button class="btn btn-police mb-2" onclick="exportDatabase()">
+                        <i class="fas fa-download me-2"></i> Export Data
+                    </button>
+                    <button class="btn btn-outline-primary mb-2" onclick="backupDatabase()">
+                        <i class="fas fa-database me-2"></i> Backup Database
+                    </button>
+                    <button class="btn btn-outline-warning mb-2" onclick="searchDatabase()">
+                        <i class="fas fa-search me-2"></i> Advanced Search
+                    </button>
+                    <button class="btn btn-outline-info" onclick="showSystemInfo()">
+                        <i class="fas fa-info-circle me-2"></i> System Info
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Database Statistics -->
+        <div class="card card-police mt-4">
+            <div class="card-header bg-white">
+                <h5 class="mb-0"><i class="fas fa-chart-bar me-2"></i>Database Statistics</h5>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-6 mb-3">
+                        <div class="border rounded p-2">
+                            <div class="text-primary fw-bold fs-4" id="policeIncidentsCount">0</div>
+                            <small>Police Incidents</small>
+                        </div>
+                    </div>
+                    <div class="col-6 mb-3">
+                        <div class="border rounded p-2">
+                            <div class="text-secondary fw-bold fs-4" id="publicIncidentsCount">0</div>
+                            <small>Public Incidents</small>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="border rounded p-2">
+                            <div class="text-success fw-bold fs-4" id="activeIncidentsCount">0</div>
+                            <small>Active</small>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="border rounded p-2">
+                            <div class="text-warning fw-bold fs-4" id="resolvedIncidentsCount">0</div>
+                            <small>Resolved</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Live Updates & System Status -->
+    <div class="col-md-8 mb-4">
+        <div class="card card-police">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">System Activity</h5>
+                <span class="badge bg-success" id="connectionStatus">
+                    <i class="fas fa-circle me-1"></i>Connected to MongoDB
+                </span>
+            </div>
+            <div class="card-body">
+                <div id="liveUpdates" class="live-updates-container">
+                    <div class="text-center text-muted">
+                        <i class="fas fa-sync fa-spin me-2"></i>Loading system activity...
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Database Reports -->
+        <div class="card card-police mt-4">
+            <div class="card-header bg-white">
+                <h5 class="mb-0"><i class="fas fa-file-alt me-2"></i>Quick Reports</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <div class="card h-100 text-center">
+                            <div class="card-body">
+                                <i class="fas fa-file-csv fa-2x text-success mb-2"></i>
+                                <h6>CSV Export</h6>
+                                <a href="{{ url_for('export_csv') }}" class="btn btn-sm btn-success w-100">
+                                    <i class="fas fa-download me-1"></i>Download
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <div class="card h-100 text-center">
+                            <div class="card-body">
+                                <i class="fas fa-file-pdf fa-2x text-danger mb-2"></i>
+                                <h6>PDF Report</h6>
+                                <a href="{{ url_for('export_pdf') }}" class="btn btn-sm btn-danger w-100">
+                                    <i class="fas fa-download me-1"></i>Download
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <div class="card h-100 text-center">
+                            <div class="card-body">
+                                <i class="fas fa-file-excel fa-2x text-primary mb-2"></i>
+                                <h6>Excel Export</h6>
+                                <a href="{{ url_for('export_excel') }}" class="btn btn-sm btn-primary w-100">
+                                    <i class="fas fa-download me-1"></i>Download
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Officer Modal -->
+<div class="modal fade" id="addOfficerModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add New Police Officer</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="officerForm">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Full Name *</label>
+                                <input type="text" class="form-control" name="full_name" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Badge Number *</label>
+                                <input type="text" class="form-control" name="badge_number" required>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Designation *</label>
+                                <select class="form-select" name="designation" required>
+                                    <option value="">Select Designation...</option>
+                                    <option value="Police Officer">Police Officer</option>
+                                    <option value="Sub-Inspector">Sub-Inspector</option>
+                                    <option value="Inspector">Inspector</option>
+                                    <option value="Circle Inspector">Circle Inspector</option>
+                                    <option value="Deputy Superintendent">Deputy Superintendent</option>
+                                    <option value="Superintendent">Superintendent</option>
+                                    <option value="Deputy Commissioner">Deputy Commissioner</option>
+                                    <option value="Commissioner">Commissioner</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Police Station *</label>
+                                <input type="text" class="form-control" name="police_station" value="{{ current_user.police_station }}" required>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Email *</label>
+                                <input type="email" class="form-control" name="email" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Phone</label>
+                                <input type="tel" class="form-control" name="phone">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="alert alert-info">
+                        <small>
+                            <i class="fas fa-info-circle me-2"></i>
+                            <strong>Note:</strong> This adds the officer to the personnel database. 
+                            To create login credentials, the officer must register separately through the registration page.
+                        </small>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-success" onclick="submitOfficer()">Add Officer</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- System Info Modal -->
+<div class="modal fade" id="systemInfoModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">System Information</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Database Information</h6>
+                        <table class="table table-sm">
+                            <tr>
+                                <td><strong>Database:</strong></td>
+                                <td>SwiftAid</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Connection:</strong></td>
+                                <td><span class="badge bg-success" id="dbStatus">Connected</span></td>
+                            </tr>
+                            <tr>
+                                <td><strong>Collections:</strong></td>
+                                <td id="collectionsCount">5</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Total Records:</strong></td>
+                                <td id="totalRecords">0</td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>System Status</h6>
+                        <table class="table table-sm">
+                            <tr>
+                                <td><strong>Server:</strong></td>
+                                <td><span class="badge bg-success">Online</span></td>
+                            </tr>
+                            <tr>
+                                <td><strong>Last Backup:</strong></td>
+                                <td id="lastBackup">Never</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Uptime:</strong></td>
+                                <td id="systemUptime">0 days</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Version:</strong></td>
+                                <td>v2.1.0</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+<script>
+    let policeMap;
+    let incidentMarkers = [];
+
+    // Initialize map centered on Davanagere
+    function initializeMap() {
+        policeMap = L.map('map').setView([14.4644, 75.9218], 13);
+        
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap contributors'
+        }).addTo(policeMap);
+
+        // Load incidents on map
+        loadIncidentsOnMap();
+        
+        // Set up auto-refresh every 30 seconds
+        setInterval(loadIncidentsOnMap, 30000);
+    }
+
+    // Load incidents from MongoDB and display on map
+    function loadIncidentsOnMap() {
+        fetch('/api/incidents')
+            .then(response => response.json())
+            .then(incidents => {
+                // Clear existing markers
+                incidentMarkers.forEach(marker => policeMap.removeLayer(marker));
+                incidentMarkers = [];
+                
+                // Add new markers
+                incidents.forEach(incident => {
+                    const marker = addIncidentToMap(incident);
+                    incidentMarkers.push(marker);
+                });
+                
+                // Update incident count
+                document.getElementById('incidentCount').textContent = incidents.length;
+            })
+            .catch(error => console.error('Error loading incidents:', error));
+    }
+
+    // Add a single incident to the map
+    function addIncidentToMap(incident) {
+        const severityColor = getSeverityColor(incident.severity);
+        const severityIcon = getSeverityIcon(incident.severity);
+        
+        // Custom icon based on severity
+        const customIcon = L.divIcon({
+            html: `<div class="map-marker severity-${incident.severity}">${severityIcon}</div>`,
+            className: 'custom-marker',
+            iconSize: [30, 30],
+            iconAnchor: [15, 30]
+        });
+        
+        const marker = L.marker([incident.lat, incident.lng], {icon: customIcon})
+            .addTo(policeMap)
+            .bindPopup(`
+                <div class="incident-popup">
+                    <h6><strong>${incident.title}</strong></h6>
+                    <p><strong>Type:</strong> ${incident.type}</p>
+                    <p><strong>Source:</strong> ${incident.source}</p>
+                    <p><strong>Severity:</strong> <span class="badge bg-${incident.severity}">${incident.severity}</span></p>
+                    <p><strong>Status:</strong> ${incident.status}</p>
+                    <p><strong>Location:</strong> ${incident.address}</p>
+                    <p><strong>Reported:</strong> ${new Date(incident.created_at).toLocaleString()}</p>
+                    <div class="mt-2">
+                        <button class="btn btn-sm btn-primary" onclick="focusOnIncident('${incident.id}')">Focus</button>
+                        <button class="btn btn-sm btn-warning" onclick="updateIncidentStatus('${incident.id}', 'resolved')">Resolve</button>
+                    </div>
+                </div>
+            `);
+        
+        return marker;
+    }
+
+    // Get color based on severity
+    function getSeverityColor(severity) {
+        switch(severity) {
+            case 'high': return '#dc3545';
+            case 'medium': return '#ffc107';
+            case 'low': return '#198754';
+            default: return '#6c757d';
+        }
+    }
+
+    // Get icon based on severity
+    function getSeverityIcon(severity) {
+        switch(severity) {
+            case 'high': return '🔴';
+            case 'medium': return '🟡';
+            case 'low': return '🟢';
+            default: return '⚪';
+        }
+    }
+
+    // Load recent incidents for the list
+    async function loadRecentIncidents() {
+        try {
+            const response = await fetch('/api/recent-incidents');
+            const incidents = await response.json();
+            
+            const incidentsList = document.getElementById('incidentsList');
+            
+            if (!incidents || incidents.length === 0) {
+                incidentsList.innerHTML = `
+                    <div class="list-group-item text-center text-muted py-4">
+                        <i class="fas fa-inbox fa-2x mb-2"></i>
+                        <p>No incidents reported yet</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            let incidentsHTML = '';
+            incidents.forEach(incident => {
+                const severityColor = incident.severity === 'high' ? 'danger' : 
+                                    incident.severity === 'medium' ? 'warning' : 'success';
+                const statusColor = incident.status === 'active' ? 'primary' : 
+                                  incident.status === 'resolved' ? 'success' : 'secondary';
+                const sourceBadge = incident.source === 'police' ? 
+                    '<span class="badge bg-primary">Police</span>' : 
+                    '<span class="badge bg-secondary">Public</span>';
+                
+                const createdTime = new Date(incident.created_at).toLocaleTimeString();
+                
+                incidentsHTML += `
+                    <div class="list-group-item list-group-item-action incident-item" 
+                         data-lat="${incident.latitude}" 
+                         data-lng="${incident.longitude}"
+                         data-id="${incident.id}">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1">${incident.title}</h6>
+                            <small class="text-muted">${createdTime}</small>
+                        </div>
+                        <p class="mb-1">
+                            ${incident.description ? incident.description.substring(0, 100) + '...' : 'No description available'}
+                        </p>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <small class="text-${severityColor}">
+                                <i class="fas fa-map-marker-alt me-1"></i> 
+                                ${incident.address}
+                            </small>
+                            <span class="badge bg-${severityColor}">
+                                ${incident.severity.charAt(0).toUpperCase() + incident.severity.slice(1)}
+                            </span>
+                        </div>
+                        <div class="mt-1">
+                            <small class="text-muted">
+                                Status: <span class="badge bg-${statusColor}">${incident.status}</span>
+                                Source: ${sourceBadge}
+                            </small>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            incidentsList.innerHTML = incidentsHTML;
+            
+            // Add click handlers to incident items
+            document.querySelectorAll('.incident-item').forEach(item => {
+                item.addEventListener('click', function() {
+                    const lat = parseFloat(this.dataset.lat);
+                    const lng = parseFloat(this.dataset.lng);
+                    if (policeMap) {
+                        policeMap.setView([lat, lng], 16);
+                    }
+                });
+            });
+            
+        } catch (error) {
+            console.error('Error loading recent incidents:', error);
+            document.getElementById('incidentsList').innerHTML = `
+                <div class="list-group-item text-center text-danger py-4">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    Error loading incidents
+                </div>
+            `;
+        }
+    }
+
+    // Update live updates section
+    function updateLiveUpdates(incidents) {
+        const updatesContainer = document.getElementById('liveUpdates');
+        const activeIncidents = incidents.filter(incident => incident.status === 'active');
+        
+        if (activeIncidents.length === 0) {
+            updatesContainer.innerHTML = '<div class="text-center text-success"><i class="fas fa-check-circle me-2"></i>All incidents resolved</div>';
+            return;
+        }
+        
+        let updatesHTML = '';
+        activeIncidents.slice(0, 5).forEach(incident => {
+            const timeAgo = getTimeAgo(new Date(incident.created_at));
+            const sourceBadge = incident.source === 'police' ? 
+                '<span class="badge bg-primary ms-2">Police</span>' : 
+                '<span class="badge bg-secondary ms-2">Public</span>';
+            
+            updatesHTML += `
+                <div class="update-item mb-2 p-2 border-start border-${incident.severity}">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <strong>${incident.title}</strong>
+                            ${sourceBadge}
+                        </div>
+                        <small class="text-muted">${timeAgo}</small>
+                    </div>
+                    <small class="text-muted">${incident.address}</small>
+                </div>
+            `;
+        });
+        
+        updatesContainer.innerHTML = updatesHTML;
+    }
+
+    // Utility function to get time ago
+    function getTimeAgo(date) {
+        const seconds = Math.floor((new Date() - date) / 1000);
+        if (seconds < 60) return 'just now';
+        const minutes = Math.floor(seconds / 60);
+        if (minutes < 60) return `${minutes}m ago`;
+        const hours = Math.floor(minutes / 60);
+        if (hours < 24) return `${hours}h ago`;
+        return `${Math.floor(hours / 24)}d ago`;
+    }
+
+    // Refresh functions
+    function refreshIncidents() {
+        loadRecentIncidents();
+    }
+
+    function refreshMap() {
+        loadIncidentsOnMap();
+    }
+
+    // Action functions
+    function focusOnIncident(incidentId) {
+        // Find incident and focus map on it
+        fetch('/api/incidents')
+            .then(response => response.json())
+            .then(incidents => {
+                const incident = incidents.find(inc => inc.id === incidentId);
+                if (incident && policeMap) {
+                    policeMap.setView([incident.lat, incident.lng], 16);
+                }
+            });
+    }
+
+    function updateIncidentStatus(incidentId, status) {
+        fetch(`/api/incidents/${incidentId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                status: status
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            alert('Incident status updated successfully');
+            loadIncidentsOnMap();
+            loadRecentIncidents();
+        })
+        .catch(error => {
+            console.error('Error updating incident:', error);
+            alert('Error updating incident status');
+        });
+    }
+
+    // Database Actions
+    function exportDatabase() {
+        alert('Database export feature will be implemented soon');
+    }
+
+    function backupDatabase() {
+        alert('Database backup feature will be implemented soon');
+    }
+
+    function searchDatabase() {
+        alert('Advanced search feature will be implemented soon');
+    }
+
+    function showSystemInfo() {
+        loadSystemInfo();
+        const modal = new bootstrap.Modal(document.getElementById('systemInfoModal'));
+        modal.show();
+    }
+
+    // Add Officer functions
+    function showAddOfficerModal() {
+        const modal = new bootstrap.Modal(document.getElementById('addOfficerModal'));
+        modal.show();
+    }
+
+    async function submitOfficer() {
+        const form = document.getElementById('officerForm');
+        const formData = new FormData(form);
+        
+        const officerData = {};
+        for (const [key, value] of formData.entries()) {
+            officerData[key] = value;
+        }
+        
+        try {
+            const response = await fetch('/api/police-officers', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(officerData)
+            });
+            
+            const result = await response.json();
+            
+            if (response.ok) {
+                alert('Police officer added successfully!');
+                const modal = bootstrap.Modal.getInstance(document.getElementById('addOfficerModal'));
+                modal.hide();
+                form.reset();
+                
+                // Refresh the page to update the active officers count
+                location.reload();
+            } else {
+                alert('Error: ' + result.error);
+            }
+        } catch (error) {
+            console.error('Error adding officer:', error);
+            alert('Error adding police officer');
+        }
+    }
+
+    // Load recent activity from database
+    async function loadRecentActivity() {
+        try {
+            const response = await fetch('/api/recent-activity');
+            const data = await response.json();
+            
+            if (response.ok && data.activities) {
+                updateRecentActivity(data.activities);
+            }
+        } catch (error) {
+            console.error('Error loading recent activity:', error);
+        }
+    }
+
+    function updateRecentActivity(activities) {
+        const updatesContainer = document.getElementById('liveUpdates');
+        
+        if (!activities || activities.length === 0) {
+            updatesContainer.innerHTML = '<div class="text-center text-muted">No recent activity</div>';
+            return;
+        }
+        
+        let updatesHTML = '';
+        activities.forEach(activity => {
+            updatesHTML += `
+                <div class="update-item mb-2 p-2 border-start border-${activity.color}">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <i class="fas ${activity.icon} text-${activity.color} me-2"></i>
+                            <strong>${activity.text}</strong>
+                        </div>
+                        <small class="text-muted">${activity.time}</small>
+                    </div>
+                </div>
+            `;
+        });
+        
+        updatesContainer.innerHTML = updatesHTML;
+    }
+
+    // Load database statistics
+    async function loadDatabaseStats() {
+        try {
+            const response = await fetch('/api/database-stats');
+            const stats = await response.json();
+            
+            if (response.ok) {
+                document.getElementById('policeIncidentsCount').textContent = stats.police_incidents;
+                document.getElementById('publicIncidentsCount').textContent = stats.public_incidents;
+                document.getElementById('activeIncidentsCount').textContent = stats.police_incidents + stats.public_incidents - stats.total_resolved;
+                document.getElementById('resolvedIncidentsCount').textContent = stats.total_resolved;
+                document.getElementById('collectionsCount').textContent = stats.collections;
+                document.getElementById('totalRecords').textContent = stats.police_incidents + stats.public_incidents + stats.resolved_cases + stats.officers + stats.users;
+            }
+        } catch (error) {
+            console.error('Error loading database stats:', error);
+        }
+    }
+
+    // Load system information
+    async function loadSystemInfo() {
+        try {
+            const response = await fetch('/api/database-stats');
+            const stats = await response.json();
+            
+            if (response.ok) {
+                document.getElementById('dbStatus').innerHTML = '<i class="fas fa-circle me-1"></i>Connected';
+                document.getElementById('dbStatus').className = 'badge bg-success';
+                document.getElementById('collectionsCount').textContent = stats.collections;
+                document.getElementById('totalRecords').textContent = stats.police_incidents + stats.public_incidents + stats.resolved_cases + stats.officers + stats.users;
+            }
+        } catch (error) {
+            console.error('Error loading system info:', error);
+            document.getElementById('dbStatus').innerHTML = '<i class="fas fa-circle me-1"></i>Disconnected';
+            document.getElementById('dbStatus').className = 'badge bg-danger';
+        }
+    }
+
+    // Initialize when page loads
+    document.addEventListener('DOMContentLoaded', function() {
+        initializeMap();
+        loadRecentIncidents();
+        loadRecentActivity();
+        loadDatabaseStats();
+        
+        // Set up auto-refresh
+        setInterval(loadRecentIncidents, 30000);
+        setInterval(loadRecentActivity, 60000);
+        setInterval(loadDatabaseStats, 60000);
+    });
+
+    // Test database connection
+    async function testDatabaseConnection() {
+        try {
+            const response = await fetch('/api/database-stats');
+            if (response.ok) {
+                document.getElementById('connectionStatus').innerHTML = '<i class="fas fa-circle me-1"></i>Connected to MongoDB';
+                document.getElementById('connectionStatus').className = 'badge bg-success';
+            } else {
+                throw new Error('Database connection failed');
+            }
+        } catch (error) {
+            console.error('Database connection error:', error);
+            document.getElementById('connectionStatus').innerHTML = '<i class="fas fa-circle me-1"></i>Database Offline';
+            document.getElementById('connectionStatus').className = 'badge bg-danger';
+        }
+    }
+
+    // Test connection on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        testDatabaseConnection();
+    });
+</script>
+
+<style>
+.map-marker {
+    font-size: 20px;
+    text-align: center;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+}
+
+.custom-marker {
+    background: transparent;
+    border: none;
+}
+
+.update-item {
+    background-color: #f8f9fa;
+    border-left-width: 4px !important;
+}
+
+.live-updates-container {
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.incident-popup {
+    min-width: 250px;
+}
+
+.incident-popup .btn {
+    margin-right: 5px;
+}
+
+.stats-card {
+    text-align: center;
+    padding: 20px;
+}
+
+.stats-card i {
+    font-size: 2.5rem;
+    margin-bottom: 15px;
+    color: var(--police-primary);
+}
+
+.stats-card h3 {
+    font-size: 2rem;
+    margin-bottom: 0;
+    font-weight: 700;
+}
+
+.stats-card p {
+    color: var(--police-gray);
+    margin-bottom: 0;
+    font-size: 0.9rem;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .stats-card {
+        padding: 15px;
+    }
+    
+    .stats-card h3 {
+        font-size: 1.5rem;
+    }
+    
+    .stats-card i {
+        font-size: 2rem;
+    }
+    
+    .map-container {
+        height: 300px;
+    }
+}
+
+/* Animation for new updates */
+@keyframes highlight {
+    0% { background-color: #e3f2fd; }
+    100% { background-color: transparent; }
+}
+
+.highlight-new {
+    animation: highlight 2s ease-in-out;
+}
+
+.border.rounded {
+    border: 1px solid #dee2e6 !important;
+}
+</style>
+{% endblock %}

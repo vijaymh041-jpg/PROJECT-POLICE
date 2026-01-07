@@ -1,0 +1,405 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card card-police">
+                    <div class="card-header bg-white text-center">
+                        <h4 class="mb-0">Police Station Registration</h4>
+                        <p class="text-muted mb-0">Karnataka Police Department</p>
+                    </div>
+                    <div class="card-body">
+                        <form method="POST" id="registrationForm">
+                            <div class="mb-3">
+                                <label for="police_station" class="form-label">Police Station *</label>
+                                <select class="form-select" id="police_station" name="police_station" required>
+                                    <option value="">Select Police Station...</option>
+                                    {% for station in police_stations %}
+                                    <option value="{{ station }}">{{ station }}</option>
+                                    {% endfor %}
+                                </select>
+                                <small class="text-muted">Only one registration allowed per police station</small>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="police_station_reg_no" class="form-label">Police Station Registration Number *</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fas fa-id-card"></i></span>
+                                    <input type="text" class="form-control" id="police_station_reg_no" name="police_station_reg_no" 
+                                           pattern="\d{6}" title="Enter exactly 6 digits" 
+                                           placeholder="Enter 6-digit number" required maxlength="6">
+                                </div>
+                                <small class="text-muted">Unique 6-digit registration number for login (e.g., 123456)</small>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="ward_number" class="form-label">Police Station Ward Number *</label>
+                                <input type="text" class="form-control" id="ward_number" name="ward_number" 
+                                       pattern="[A-Za-z0-9\-\/]+" title="Enter valid ward number" required>
+                                <small class="text-muted">Format: Ward-XX/YY or similar</small>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="password" class="form-label">Password *</label>
+                                <input type="password" class="form-control" id="password" name="password" 
+                                       pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$"
+                                       title="Password must contain at least 8 characters including uppercase, lowercase, number, and special character"
+                                       required>
+                                <div class="password-requirements mt-2">
+                                    <small class="text-muted">Password must contain:</small>
+                                    <ul class="list-unstyled small">
+                                        <li id="req-length" class="text-danger"><i class="fas fa-times-circle me-1"></i> At least 8 characters</li>
+                                        <li id="req-upper" class="text-danger"><i class="fas fa-times-circle me-1"></i> One uppercase letter</li>
+                                        <li id="req-lower" class="text-danger"><i class="fas fa-times-circle me-1"></i> One lowercase letter</li>
+                                        <li id="req-number" class="text-danger"><i class="fas fa-times-circle me-1"></i> One number</li>
+                                        <li id="req-special" class="text-danger"><i class="fas fa-times-circle me-1"></i> One special character</li>
+                                    </ul>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="confirm_password" class="form-label">Confirm Password *</label>
+                                <input type="password" class="form-control" id="confirm_password" name="confirm_password" required>
+                                <div id="password-match" class="mt-2"></div>
+                            </div>
+
+                            <div class="mb-3 form-check">
+                                <input type="checkbox" class="form-check-input" id="terms" name="terms" required>
+                                <label class="form-check-label small" for="terms">
+                                    I agree to the <a href="#" data-bs-toggle="modal" data-bs-target="#termsModal">Terms & Conditions</a> of the Karnataka Police Department
+                                </label>
+                            </div>
+
+                            <button type="submit" class="btn btn-police w-100" id="submitBtn" disabled>
+                                <i class="fas fa-shield-alt me-2"></i>Register Police Station
+                            </button>
+                        </form>
+                        
+                        <div class="mt-3 text-center">
+                            <p>Already have an account? <a href="{{ url_for('login') }}" class="fw-bold">Login here</a></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+    <div class="card card-police h-100">
+        <div class="card-header bg-white">
+            <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>Registration Information</h5>
+        </div>
+        <div class="card-body">
+            <div class="alert alert-info">
+                <h6><i class="fas fa-shield-alt me-2"></i>Police Station Registration</h6>
+                <p class="mb-2">Register your police station to access the Karnataka Police Incident Management System.</p>
+                <p class="mb-0"><strong>Note:</strong> Each police station can register only once, regardless of ward number.</p>
+            </div>
+
+            <h6>Required Information:</h6>
+            <ul class="list-unstyled">
+                <li><i class="fas fa-building me-2 text-primary"></i>Police Station Name (from dropdown)</li>
+                <li><i class="fas fa-id-card me-2 text-primary"></i>6-digit Registration Number (for login)</li>
+                <li><i class="fas fa-map-marker-alt me-2 text-primary"></i>Ward Number (Police Station Location)</li>
+                <li><i class="fas fa-key me-2 text-primary"></i>Secure Password</li>
+            </ul>
+
+            <h6 class="mt-4">Registration Rules:</h6>
+            <ul class="list-unstyled">
+                <li><i class="fas fa-check-circle me-2 text-success"></i>One police station = One registration</li>
+                <li><i class="fas fa-check-circle me-2 text-success"></i>Cannot register same station with different ward</li>
+                <li><i class="fas fa-check-circle me-2 text-success"></i>6-digit registration number must be unique</li>
+                <li><i class="fas fa-check-circle me-2 text-success"></i>Share credentials among station personnel</li>
+                <li><i class="fas fa-times-circle me-2 text-danger"></i>Cannot create multiple accounts for same station</li>
+            </ul>
+
+            <h6 class="mt-4">Login Information:</h6>
+            <p class="small">For login, you will need:</p>
+            <ul class="list-unstyled">
+                <li><i class="fas fa-sign-in-alt me-2 text-success"></i>Your Police Station Name</li>
+                <li><i class="fas fa-key me-2 text-success"></i>Your 6-digit Registration Number</li>
+                <li><i class="fas fa-lock me-2 text-success"></i>Your Password</li>
+            </ul>
+
+            <h6 class="mt-4">Important Notes:</h6>
+            <div class="alert alert-warning">
+                <small>
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    <strong>Single Registration Policy:</strong> Once a police station is registered, no one else can register the same station, even with a different ward number. Multiple officers from the same station should share the login credentials.
+                </small>
+            </div>
+
+            <h6 class="mt-4">Password Requirements:</h6>
+            <ul class="list-unstyled">
+                <li><i class="fas fa-check-circle me-2 text-success"></i>Minimum 8 characters</li>
+                <li><i class="fas fa-check-circle me-2 text-success"></i>At least one uppercase letter (A-Z)</li>
+                <li><i class="fas fa-check-circle me-2 text-success"></i>At least one lowercase letter (a-z)</li>
+                <li><i class="fas fa-check-circle me-2 text-success"></i>At least one number (0-9)</li>
+                <li><i class="fas fa-check-circle me-2 text-success"></i>At least one special character (!@#$%^&*)</li>
+            </ul>
+
+            <div class="alert alert-success mt-3">
+                <small>
+                    <i class="fas fa-database me-2"></i>
+                    <strong>Data Security:</strong> All credentials are encrypted and stored securely in POLICE_users collection
+                </small>
+            </div>
+        </div>
+    </div>
+</div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="termsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Karnataka Police Department - Terms & Conditions</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <h6>1. Authorization</h6>
+                <p>This system is authorized for use only by registered Karnataka Police Stations. Unauthorized access is strictly prohibited.</p>
+                
+                <h6>2. Single Registration Policy</h6>
+                <p>Each police station can register only once. Multiple registrations for the same station are not allowed.</p>
+                
+                <h6>3. Registration Number</h6>
+                <p>Each police station must have a unique 6-digit registration number. This number is used for login and identification.</p>
+                
+                <h6>4. Data Confidentiality</h6>
+                <p>All incident data, reports, and officer information are confidential and protected under the Karnataka Police Act.</p>
+                
+                <h6>5. System Usage</h6>
+                <p>The system must be used only for official police work. All activities are logged and monitored.</p>
+                
+                <h6>6. Password Security</h6>
+                <p>Passwords must follow security guidelines and should not be shared with unauthorized personnel.</p>
+                
+                <h6>7. Data Accuracy</h6>
+                <p>Police stations are responsible for maintaining accurate ward numbers in the system.</p>
+                
+                <div class="alert alert-info mt-3">
+                    <small>
+                        <i class="fas fa-gavel me-2"></i>
+                        <strong>Legal:</strong> Violation of these terms may result in disciplinary action under police regulations.
+                    </small>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.form-label {
+    font-weight: 500;
+    color: #333;
+}
+
+.card {
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+#police_station {
+    height: 45px;
+}
+
+.password-requirements ul li {
+    margin-bottom: 2px;
+    font-size: 0.8rem;
+}
+
+.password-requirements .text-success {
+    color: #198754 !important;
+}
+
+.password-requirements .text-danger {
+    color: #dc3545 !important;
+}
+
+#password-match {
+    font-size: 0.8rem;
+}
+
+.input-group-text {
+    background-color: #f8f9fa;
+}
+</style>
+
+<script>
+// Password validation function
+function validatePassword(password) {
+    const requirements = {
+        length: password.length >= 8,
+        upper: /[A-Z]/.test(password),
+        lower: /[a-z]/.test(password),
+        number: /\d/.test(password),
+        special: /[@$!%*?&]/.test(password)
+    };
+    
+    // Update requirement indicators
+    document.getElementById('req-length').className = requirements.length ? 'text-success' : 'text-danger';
+    document.getElementById('req-length').innerHTML = requirements.length ? 
+        '<i class="fas fa-check-circle me-1"></i> At least 8 characters' : 
+        '<i class="fas fa-times-circle me-1"></i> At least 8 characters';
+    
+    document.getElementById('req-upper').className = requirements.upper ? 'text-success' : 'text-danger';
+    document.getElementById('req-upper').innerHTML = requirements.upper ? 
+        '<i class="fas fa-check-circle me-1"></i> One uppercase letter' : 
+        '<i class="fas fa-times-circle me-1"></i> One uppercase letter';
+    
+    document.getElementById('req-lower').className = requirements.lower ? 'text-success' : 'text-danger';
+    document.getElementById('req-lower').innerHTML = requirements.lower ? 
+        '<i class="fas fa-check-circle me-1"></i> One lowercase letter' : 
+        '<i class="fas fa-times-circle me-1"></i> One lowercase letter';
+    
+    document.getElementById('req-number').className = requirements.number ? 'text-success' : 'text-danger';
+    document.getElementById('req-number').innerHTML = requirements.number ? 
+        '<i class="fas fa-check-circle me-1"></i> One number' : 
+        '<i class="fas fa-times-circle me-1"></i> One number';
+    
+    document.getElementById('req-special').className = requirements.special ? 'text-success' : 'text-danger';
+    document.getElementById('req-special').innerHTML = requirements.special ? 
+        '<i class="fas fa-check-circle me-1"></i> One special character' : 
+        '<i class="fas fa-times-circle me-1"></i> One special character';
+    
+    return Object.values(requirements).every(req => req);
+}
+
+// Password match validation
+function validatePasswordMatch() {
+    const password = document.getElementById('password').value;
+    const confirmPassword = document.getElementById('confirm_password').value;
+    const matchDiv = document.getElementById('password-match');
+    
+    if (confirmPassword === '') {
+        matchDiv.innerHTML = '';
+        return false;
+    }
+    
+    if (password === confirmPassword) {
+        matchDiv.innerHTML = '<small class="text-success"><i class="fas fa-check-circle me-1"></i> Passwords match</small>';
+        return true;
+    } else {
+        matchDiv.innerHTML = '<small class="text-danger"><i class="fas fa-times-circle me-1"></i> Passwords do not match</small>';
+        return false;
+    }
+}
+
+// Validate registration number
+function validateRegistrationNumber() {
+    const regNo = document.getElementById('police_station_reg_no').value;
+    const regNoRegex = /^\d{6}$/;
+    return regNoRegex.test(regNo);
+}
+
+// Enable/disable submit button based on form validity
+function updateSubmitButton() {
+    const form = document.getElementById('registrationForm');
+    const password = document.getElementById('password').value;
+    const terms = document.getElementById('terms').checked;
+    const policeStation = document.getElementById('police_station').value;
+    const regNo = document.getElementById('police_station_reg_no').value;
+    const wardNumber = document.getElementById('ward_number').value;
+    
+    const isPasswordValid = validatePassword(password);
+    const isPasswordMatch = validatePasswordMatch();
+    const isRegNoValid = validateRegistrationNumber();
+    const isFormValid = form.checkValidity() && isPasswordValid && isPasswordMatch && terms && isRegNoValid && policeStation && wardNumber;
+    
+    document.getElementById('submitBtn').disabled = !isFormValid;
+}
+
+// Format registration number input
+document.getElementById('police_station_reg_no').addEventListener('input', function(e) {
+    // Remove any non-digit characters
+    this.value = this.value.replace(/\D/g, '');
+    
+    // Limit to 6 digits
+    if (this.value.length > 6) {
+        this.value = this.value.slice(0, 6);
+    }
+    
+    updateSubmitButton();
+});
+
+// Search functionality for police station dropdown
+document.addEventListener('DOMContentLoaded', function() {
+    const policeStationSelect = document.getElementById('police_station');
+    const originalOptions = Array.from(policeStationSelect.options);
+    
+    // Create search input
+    const searchInput = document.createElement('input');
+    searchInput.type = 'text';
+    searchInput.className = 'form-control mb-2';
+    searchInput.placeholder = 'Search police stations...';
+    
+    policeStationSelect.parentNode.insertBefore(searchInput, policeStationSelect);
+    
+    searchInput.addEventListener('input', function(e) {
+        const searchTerm = e.target.value.toLowerCase();
+        
+        // Clear existing options (keep first option)
+        policeStationSelect.innerHTML = '';
+        policeStationSelect.appendChild(originalOptions[0]);
+        
+        // Filter and add matching options
+        originalOptions.slice(1).forEach(option => {
+            if (option.text.toLowerCase().includes(searchTerm)) {
+                policeStationSelect.appendChild(option);
+            }
+        });
+    });
+    
+    // Add event listeners for real-time validation
+    document.getElementById('password').addEventListener('input', updateSubmitButton);
+    document.getElementById('confirm_password').addEventListener('input', updateSubmitButton);
+    document.getElementById('terms').addEventListener('change', updateSubmitButton);
+    document.getElementById('police_station').addEventListener('change', updateSubmitButton);
+    document.getElementById('police_station_reg_no').addEventListener('input', updateSubmitButton);
+    document.getElementById('ward_number').addEventListener('input', updateSubmitButton);
+    
+    // Add event listeners to all required fields
+    const requiredFields = document.querySelectorAll('[required]');
+    requiredFields.forEach(field => {
+        field.addEventListener('input', updateSubmitButton);
+        field.addEventListener('change', updateSubmitButton);
+    });
+    
+    // Initial validation
+    updateSubmitButton();
+});
+
+// Form submission handler
+document.getElementById('registrationForm').addEventListener('submit', function(e) {
+    // Final validation before submission
+    const password = document.getElementById('password').value;
+    if (!validatePassword(password)) {
+        e.preventDefault();
+        alert('Please ensure your password meets all requirements.');
+        return;
+    }
+    
+    if (!validatePasswordMatch()) {
+        e.preventDefault();
+        alert('Passwords do not match.');
+        return;
+    }
+    
+    if (!validateRegistrationNumber()) {
+        e.preventDefault();
+        alert('Please enter a valid 6-digit registration number.');
+        return;
+    }
+    
+    // Show loading state
+    const submitBtn = document.getElementById('submitBtn');
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Registering...';
+    submitBtn.disabled = true;
+});
+</script>
+{% endblock %}

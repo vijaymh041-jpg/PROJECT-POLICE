@@ -1,0 +1,250 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card card-police">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                <h4 class="mb-0">My Profile</h4>
+                <span class="badge bg-primary">{{ user.role|title }}</span>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4 text-center">
+                        <div class="mb-4">
+                            <div class="avatar-circle-large mx-auto mb-3">
+                                <span class="initials-large">{{ user.username[0].upper() }}</span>
+                            </div>
+                            <h5>{{ user.full_name or user.username }}</h5>
+                            <p class="text-muted">{{ user.designation or 'Police Officer' }}</p>
+                            <p class="text-muted small">{{ user.police_station or 'Police Station' }}</p>
+                        </div>
+                        
+                        <div class="card">
+                            <div class="card-body">
+                                <h6>Account Information</h6>
+                                <small class="text-muted">
+                                    <strong>Member since:</strong><br>
+                                    {{ user.created_at.strftime('%Y-%m-%d') }}
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-8">
+                        <form id="profileForm">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">Username</label>
+                                        <input type="text" class="form-control" value="{{ user.username }}" readonly>
+                                        <small class="text-muted">Username cannot be changed</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="email" class="form-label">Email *</label>
+                                        <input type="email" class="form-control" id="email" name="email" value="{{ user.email }}" required>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="full_name" class="form-label">Full Name *</label>
+                                        <input type="text" class="form-control" id="full_name" name="full_name" value="{{ user.full_name }}" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="designation" class="form-label">Designation *</label>
+                                        <select class="form-select" id="designation" name="designation" required>
+                                            <option value="Police Officer" {% if user.designation == 'Police Officer' %}selected{% endif %}>Police Officer</option>
+                                            <option value="Sub-Inspector" {% if user.designation == 'Sub-Inspector' %}selected{% endif %}>Sub-Inspector</option>
+                                            <option value="Inspector" {% if user.designation == 'Inspector' %}selected{% endif %}>Inspector</option>
+                                            <option value="Circle Inspector" {% if user.designation == 'Circle Inspector' %}selected{% endif %}>Circle Inspector</option>
+                                            <option value="Deputy Superintendent" {% if user.designation == 'Deputy Superintendent' %}selected{% endif %}>Deputy Superintendent</option>
+                                            <option value="Superintendent" {% if user.designation == 'Superintendent' %}selected{% endif %}>Superintendent</option>
+                                            <option value="Deputy Commissioner" {% if user.designation == 'Deputy Commissioner' %}selected{% endif %}>Deputy Commissioner</option>
+                                            <option value="Commissioner" {% if user.designation == 'Commissioner' %}selected{% endif %}>Commissioner</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="police_station" class="form-label">Police Station *</label>
+                                <input type="text" class="form-control" id="police_station" name="police_station" value="{{ user.police_station }}" required readonly>
+                                <small class="text-muted">Your assigned police station in Karnataka</small>
+                            </div>
+
+                            <!-- Police Station Registration Number Field -->
+                            <div class="mb-3">
+                                <label for="police_station_reg_no" class="form-label">Police Station Registration Number</label>
+                                <input type="text" class="form-control" id="police_station_reg_no" name="police_station_reg_no" 
+                                       value="{{ user.police_station_reg_no if user.police_station_reg_no else '' }}" readonly>
+                                <small class="text-muted">Unique 6-digit registration number for login (cannot be changed)</small>
+                            </div>
+
+                            <!-- Only Ward Number (Register Number removed) -->
+                            <div class="mb-3">
+                                <label for="ward_number" class="form-label">Police Station Ward Number *</label>
+                                <input type="text" class="form-control" id="ward_number" name="ward_number" 
+                                       value="{{ user.ward_number if user.ward_number else '' }}" required>
+                                <small class="text-muted">Format: Ward-XX/YY or similar</small>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Role</label>
+                                <input type="text" class="form-control" value="{{ user.role|title }}" readonly>
+                            </div>
+
+                            <div class="d-flex gap-2">
+                                <button type="submit" class="btn btn-police">Update Profile</button>
+                                <button type="button" class="btn btn-outline-secondary" onclick="resetForm()">Reset</button>
+                            </div>
+                        </form>
+
+                        <div class="mt-4 p-3 bg-light rounded">
+                            <h6>Quick Stats</h6>
+                            <div class="row text-center">
+                                <div class="col-4">
+                                    <div class="border rounded p-2">
+                                        <div class="text-primary fw-bold" id="myIncidentsCount">0</div>
+                                        <small>My Incidents</small>
+                                    </div>
+                                </div>
+                                <div class="col-4">
+                                    <div class="border rounded p-2">
+                                        <div class="text-success fw-bold" id="activeIncidentsCount">0</div>
+                                        <small>Active</small>
+                                    </div>
+                                </div>
+                                <div class="col-4">
+                                    <div class="border rounded p-2">
+                                        <div class="text-warning fw-bold" id="resolvedIncidentsCount">0</div>
+                                        <small>Resolved</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mt-3 p-3 bg-info text-white rounded">
+                            <h6><i class="fas fa-info-circle me-2"></i>Police Station Information</h6>
+                            <small>
+                                <strong>Station:</strong> {{ user.police_station }}<br>
+                                <strong>Registration No:</strong> {{ user.police_station_reg_no if user.police_station_reg_no else 'Not set' }}<br>
+                                <strong>Ward Number:</strong> {{ user.ward_number if user.ward_number else 'Not set' }}<br>
+                                <strong>Designation:</strong> {{ user.designation }}<br>
+                                <strong>Database:</strong> POLICE_users collection
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function resetForm() {
+    document.getElementById('profileForm').reset();
+}
+
+// Load user stats
+async function loadUserStats() {
+    try {
+        const response = await fetch('/api/incidents');
+        const incidents = await response.json();
+        
+        const myIncidents = incidents.filter(incident => incident.assigned_officer === '{{ user.username }}');
+        const activeIncidents = myIncidents.filter(incident => incident.status === 'active');
+        const resolvedIncidents = myIncidents.filter(incident => incident.status === 'resolved');
+        
+        document.getElementById('myIncidentsCount').textContent = myIncidents.length;
+        document.getElementById('activeIncidentsCount').textContent = activeIncidents.length;
+        document.getElementById('resolvedIncidentsCount').textContent = resolvedIncidents.length;
+    } catch (error) {
+        console.error('Error loading stats:', error);
+    }
+}
+
+// Update profile
+document.getElementById('profileForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const formData = {
+        email: document.getElementById('email').value,
+        full_name: document.getElementById('full_name').value,
+        designation: document.getElementById('designation').value,
+        ward_number: document.getElementById('ward_number').value
+    };
+    
+    try {
+        const response = await fetch('/api/profile', {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(formData)
+        });
+        
+        const result = await response.json();
+        
+        if (response.ok) {
+            alert('Profile updated successfully!');
+            // Update the displayed name if full_name was changed
+            const fullNameElement = document.querySelector('.card-body h5');
+            if (fullNameElement && formData.full_name) {
+                fullNameElement.textContent = formData.full_name;
+            }
+            // Update designation
+            const designationElement = document.querySelector('.card-body .text-muted');
+            if (designationElement && formData.designation) {
+                const elements = document.querySelectorAll('.card-body .text-muted');
+                if (elements[0]) elements[0].textContent = formData.designation;
+            }
+        } else {
+            alert('Error: ' + result.message);
+        }
+    } catch (error) {
+        console.error('Error updating profile:', error);
+        alert('Error updating profile');
+    }
+});
+
+document.addEventListener('DOMContentLoaded', function() {
+    loadUserStats();
+});
+</script>
+
+<style>
+.avatar-circle-large {
+    width: 100px;
+    height: 100px;
+    background-color: var(--police-primary);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 2rem;
+    font-weight: bold;
+}
+
+.initials-large {
+    color: white;
+}
+
+.form-label {
+    font-weight: 500;
+}
+
+.border.rounded {
+    border: 1px solid #dee2e6 !important;
+}
+</style>
+{% endblock %}
