@@ -397,6 +397,7 @@ def get_mongodb_connection():
         print(f"❌ MongoDB Atlas connection failed: {e}")
         raise e
 
+# Initialize MongoDB connection
 try:
     client, db_name = get_mongodb_connection()
     db = client[db_name]
@@ -437,7 +438,7 @@ def init_indexes():
 
 init_indexes()
 
-# Fix existing data issues
+# Fix existing data issues (Legacy Cleanup)
 def fix_existing_null_usernames():
     try:
         police_officers_collection.update_many({'username': None}, {'$set': {'username': ''}})
@@ -515,6 +516,7 @@ def convert_to_ist(dt):
     return dt.astimezone(IST)
 
 def process_public_incident(incident):
+    """Robustly process public incidents"""
     try:
         incident_id = str(incident.get('_id'))
         lat = float(incident.get('lat') or incident.get('latitude', 0))
@@ -551,6 +553,7 @@ def process_public_incident(incident):
         return None
 
 def process_police_incident(incident):
+    """Robustly process police incidents"""
     try:
         incident_id = str(incident.get('_id'))
         created_at = convert_to_ist(incident.get('created_at'))
@@ -600,7 +603,7 @@ def assign_case_to_officer(incident_id, source, assigned_officer, incident_data)
 @login_required
 def dashboard():
     try:
-        # Fetch ALL incidents from both collections
+        # Fetch ALL incidents from both collections (No Limits for Stats)
         raw_police = list(incidents_police_collection.find().sort('created_at', -1))
         raw_public = list(incidents_collection.find().sort('created_at', -1))
         
@@ -624,7 +627,7 @@ def dashboard():
         # Sort by latest first
         all_incidents.sort(key=lambda x: x['created_at'], reverse=True)
         
-        # Calculate Statistics for Dashboard
+        # Calculate Statistics for Dashboard (Fixing "No Numbers" Issue)
         total_incidents = len(all_incidents)
         police_count = sum(1 for x in all_incidents if x['source'] == 'police')
         public_count = sum(1 for x in all_incidents if x['source'] == 'public')
@@ -656,6 +659,7 @@ def dashboard():
                              user_incidents=user_incidents)
     except Exception as e:
         print(f"Dashboard Error: {e}")
+        # Return safe empty context to prevent crash
         return render_template('dashboard.html', incidents=[], total_incidents=0, 
                              police_count=0, public_count=0, high_severity_count=0,
                              active_incidents=0, resolved_incidents=0, 
@@ -784,6 +788,7 @@ def logout():
 @app.route('/incidents')
 @login_required
 def incidents():
+    # Same logic as dashboard to get full list
     raw_police = list(incidents_police_collection.find())
     raw_public = list(incidents_collection.find())
     
@@ -803,13 +808,13 @@ def incidents():
     
     stats = {
         'total_incidents': len(all_incidents),
-        'police_count': sum(1 for x in all_incidents if x['source'] == 'police'),
-        'public_count': sum(1 for x in all_incidents if x['source'] == 'public'),
-        'high_severity_count': sum(1 for x in all_incidents if x['severity'] == 'high'),
-        'active_count': sum(1 for x in all_incidents if x['status'] == 'active'),
-        'resolved_count': sum(1 for x in all_incidents if x['status'] == 'resolved'),
-        'assigned_count': sum(1 for x in all_incidents if x['is_assigned']),
-        'unassigned_count': len(all_incidents) - sum(1 for x in all_incidents if x['is_assigned'])
+        'police_count': sum(1 for i in all_incidents if i['source'] == 'police'),
+        'public_count': sum(1 for i in all_incidents if i['source'] == 'public'),
+        'high_severity_count': sum(1 for i in all_incidents if i['severity'] == 'high'),
+        'active_count': sum(1 for i in all_incidents if i['status'] == 'active'),
+        'resolved_count': sum(1 for i in all_incidents if i['status'] == 'resolved'),
+        'assigned_count': sum(1 for i in all_incidents if i['is_assigned']),
+        'unassigned_count': len(all_incidents) - sum(1 for i in all_incidents if i['is_assigned'])
     }
     
     officers = list(police_officers_collection.find({'status': 'active'}))
@@ -842,6 +847,7 @@ def api_incidents_route():
         res = incidents_police_collection.insert_one(new_incident)
         return jsonify({'message': 'Added', 'id': str(res.inserted_id)})
     
+    # GET Logic for Maps
     raw_police = list(incidents_police_collection.find())
     raw_public = list(incidents_collection.find())
     data = []
@@ -881,6 +887,7 @@ def assign_officer_route(incident_id):
         
         proc_inc = process_police_incident(inc) if source == 'police' else process_public_incident(inc)
         
+        # Check existing assignment
         existing = assigned_cases_collection.find_one({'incident_id': incident_id})
         if existing:
             assigned_cases_collection.update_one({'_id': existing['_id']}, {
@@ -889,6 +896,7 @@ def assign_officer_route(incident_id):
         else:
             assign_case_to_officer(incident_id, source, officer, proc_inc)
             
+        # Update original record too
         collection.update_one({'_id': ObjectId(incident_id)}, {'$set': {'assigned_officer': officer}})
         
         return jsonify({'message': 'Assigned'})
@@ -902,6 +910,7 @@ def police_officers_route():
         data = request.get_json()
         station = current_user.police_station
         
+        # Validate uniqueness
         if police_officers_collection.find_one({'badge_number': data.get('badge_number')}):
             return jsonify({'error': 'Badge number already exists'}), 400
             
@@ -919,6 +928,7 @@ def police_officers_route():
         res = police_officers_collection.insert_one(new_off)
         return jsonify({'message': 'Added', 'officer_id': str(res.inserted_id)})
 
+    # GET
     officers = list(police_officers_collection.find({'police_station': current_user.police_station, 'status': 'active'}))
     data = []
     for o in officers:
@@ -934,6 +944,7 @@ def police_officers_route():
 @app.route('/api/recent-activity')
 @login_required
 def recent_activity():
+    # Simple activity feed
     try:
         recs = list(incidents_police_collection.find().sort('created_at', -1).limit(3))
         activities = []

@@ -110,8 +110,6 @@
                 <tbody>
                     {% for incident in all_incidents %}
                     <tr class="incident-row {% if not incident.is_assigned %}unassigned-incident{% else %}assigned-incident{% endif %}"
-                        data-incident-id="{{ incident._id }}"
-                        data-source="{{ incident.source }}"
                         data-is-assigned="{{ incident.is_assigned }}">
                         
                         <td>
@@ -175,10 +173,25 @@
                                         onclick="openMap(this)">
                                     <i class="fas fa-map-marker-alt"></i>
                                 </button>
-                                <button class="btn btn-outline-success assign-officer-btn" title="Assign Officer">
+                                
+                                <button class="btn btn-outline-secondary" title="Get Directions"
+                                        data-lat="{{ incident.latitude }}" 
+                                        data-lng="{{ incident.longitude }}"
+                                        onclick="getDirections(this)">
+                                    <i class="fas fa-directions"></i>
+                                </button>
+
+                                <button class="btn btn-outline-success" title="Assign Officer"
+                                        data-id="{{ incident._id }}" 
+                                        data-source="{{ incident.source }}"
+                                        onclick="openAssignModal(this)">
                                     <i class="fas fa-user-plus"></i>
                                 </button>
-                                <button class="btn btn-outline-info view-details-btn" title="Details">
+
+                                <button class="btn btn-outline-info" title="Details"
+                                        data-id="{{ incident._id }}" 
+                                        data-source="{{ incident.source }}"
+                                        onclick="viewDetails(this)">
                                     <i class="fas fa-eye"></i>
                                 </button>
                             </div>
@@ -212,73 +225,45 @@
         document.body.style.paddingRight = '0';
     }
 
-    // --- SETUP LISTENERS ---
     document.addEventListener('DOMContentLoaded', function() {
         cleanupModals();
-
-        const tbody = document.querySelector('tbody');
-        
-        // Use Event Delegation
-        tbody.addEventListener('click', function(e) {
-            // Assign Button
-            const assignBtn = e.target.closest('.assign-officer-btn');
-            if(assignBtn) {
-                const row = assignBtn.closest('tr');
-                openAssignModal(row.dataset.incidentId, row.dataset.source);
-            }
-
-            // Details Button
-            const detailsBtn = e.target.closest('.view-details-btn');
-            if(detailsBtn) {
-                const row = detailsBtn.closest('tr');
-                viewDetails(row.dataset.incidentId, row.dataset.source);
-            }
-        });
     });
 
-    // --- FUNCTIONS ---
+    // --- BUTTON ACTIONS ---
 
-    // FIX: Updated Map Opener
+    // 1. View Location (Google Maps)
     function openMap(element) {
         const lat = element.getAttribute('data-lat');
         const lng = element.getAttribute('data-lng');
         
-        if(lat && lng && lat !== 'None' && lng !== 'None') {
-            window.open(`https://www.google.com/maps?q=${lat},${lng}`, '_blank');
+        if(lat && lng && lat !== 'None') {
+            window.open(`https://www.google.com/maps/search/?api=1&query=${lat},${lng}`, '_blank');
         } else {
-            alert("Location coordinates not available for this incident.");
+            alert("Location coordinates not available.");
         }
     }
 
-    function showAddIncidentModal() {
-        cleanupModals();
-        new bootstrap.Modal(document.getElementById('addIncidentModal')).show();
-    }
-    
-    // Placeholder functions for modals if they are in the include file or need re-definition
-    // Ensure these match what's in your modals file or define them here if missing
-    
-    function submitNewIncident() {
-        const form = document.getElementById('addIncidentForm');
-        if(!form) return;
-        const data = Object.fromEntries(new FormData(form).entries());
+    // 2. Get Directions (Google Maps Directions)
+    function getDirections(element) {
+        const lat = element.getAttribute('data-lat');
+        const lng = element.getAttribute('data-lng');
         
-        fetch('/api/incidents', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify(data)
-        })
-        .then(res => res.json())
-        .then(() => {
-            alert('Incident Reported!');
-            location.reload();
-        })
-        .catch(err => alert('Error reporting incident'));
+        if(lat && lng && lat !== 'None') {
+            // Opens directions from "Current Location" to the incident
+            window.open(`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`, '_blank');
+        } else {
+            alert("Location coordinates not available.");
+        }
     }
 
-    function openAssignModal(id, source) {
+    // 3. Open Assign Modal
+    function openAssignModal(element) {
+        const id = element.getAttribute('data-id');
+        const source = element.getAttribute('data-source');
+        
         document.getElementById('assignIncidentId').value = id;
         document.getElementById('assignIncidentSource').value = source;
+        
         const select = document.getElementById('officerSelect');
         select.innerHTML = '<option>Loading...</option>';
         
@@ -296,26 +281,11 @@
             });
     }
 
-    function submitAssignment() {
-        const id = document.getElementById('assignIncidentId').value;
-        const source = document.getElementById('assignIncidentSource').value;
-        const officer = document.getElementById('officerSelect').value;
+    // 4. View Details
+    function viewDetails(element) {
+        const id = element.getAttribute('data-id');
+        const source = element.getAttribute('data-source');
 
-        if(!officer) return alert("Select an officer");
-
-        fetch(`/api/incidents/${id}/assign-officer`, {
-            method: 'PUT',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({assigned_officer: officer, source: source})
-        })
-        .then(res => res.json())
-        .then(() => {
-            alert("Assigned Successfully!");
-            location.reload();
-        });
-    }
-
-    function viewDetails(id, source) {
         fetch(`/api/incidents/${id}/details?source=${source}`)
             .then(res => res.json())
             .then(data => {
@@ -337,6 +307,50 @@
                     new bootstrap.Modal(document.getElementById('detailsModal')).show();
                 }
             });
+    }
+
+    // --- OTHER LOGIC ---
+
+    function showAddIncidentModal() {
+        cleanupModals();
+        new bootstrap.Modal(document.getElementById('addIncidentModal')).show();
+    }
+    
+    function submitNewIncident() {
+        const form = document.getElementById('addIncidentForm');
+        if(!form) return;
+        const data = Object.fromEntries(new FormData(form).entries());
+        
+        fetch('/api/incidents', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(data)
+        })
+        .then(res => res.json())
+        .then(() => {
+            alert('Incident Reported!');
+            location.reload();
+        })
+        .catch(err => alert('Error reporting incident'));
+    }
+
+    function submitAssignment() {
+        const id = document.getElementById('assignIncidentId').value;
+        const source = document.getElementById('assignIncidentSource').value;
+        const officer = document.getElementById('officerSelect').value;
+
+        if(!officer) return alert("Select an officer");
+
+        fetch(`/api/incidents/${id}/assign-officer`, {
+            method: 'PUT',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({assigned_officer: officer, source: source})
+        })
+        .then(res => res.json())
+        .then(() => {
+            alert("Assigned Successfully!");
+            location.reload();
+        });
     }
 
     function searchIncidents() {
