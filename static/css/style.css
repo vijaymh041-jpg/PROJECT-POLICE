@@ -4,35 +4,38 @@
     --police-secondary: #034bb3;
     --police-accent: #ffc107;
     
-    /* --- LIGHT MODE --- */
-    --bg-body: #f4f6f9;
-    --bg-card: #ffffff;
-    --text-main: #212529;
-    --text-muted: #6c757d;
-    --border-color: #dee2e6;
+    /* --- LIGHT MODE DEFAULTS --- */
+    --bg-body: #f4f6f9;           /* Lightest Gray */
+    --bg-card: #ffffff;           /* White */
+    --text-main: #212529;         /* Dark Gray text */
+    --text-muted: #6c757d;        /* Muted Gray */
+    --border-color: #dee2e6;      /* Light Border */
     --input-bg: #ffffff;
+    --input-border: #ced4da;
+    --sidebar-bg: #ffffff;
+    --list-hover: #f8f9fa;
+    --shadow-sm: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    --shadow-md: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
 }
 
-/* --- DARK MODE FIXES (Crucial for Visibility) --- */
+/* --- DARK MODE OVERRIDES --- */
 [data-theme="dark"] {
-    --bg-body: #121212;
-    --bg-card: #1e1e1e;
+    --bg-body: #121212;           /* Deep Black */
+    --bg-card: #1e1e1e;           /* Dark Gray Cards */
+    
+    /* Force Text White in Dark Mode */
     --text-main: #ffffff;
-    --text-muted: #b0b0b0;
-    --border-color: #333333;
+    --text-muted: #b0b0b0;        /* Light Gray */
+    
+    --border-color: #333333;      /* Dark Border */
     --input-bg: #2d2d2d;
+    --input-border: #444444;
+    --sidebar-bg: #1e1e1e;
+    --list-hover: #2c2c2c;
+    --shadow-sm: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.5);
 }
 
-/* Force Text Colors in Dark Mode so they are visible */
-[data-theme="dark"] .text-primary { color: #6ea8fe !important; }
-[data-theme="dark"] .text-info { color: #6edff6 !important; }
-[data-theme="dark"] .text-success { color: #75b798 !important; }
-[data-theme="dark"] .text-warning { color: #ffda6a !important; }
-[data-theme="dark"] .text-danger { color: #ea868f !important; }
-[data-theme="dark"] .text-secondary { color: #adb5bd !important; }
-[data-theme="dark"] .text-muted { color: #d0d0d0 !important; }
-
-/* GLOBAL RESET */
+/* --- GLOBAL RESETS --- */
 body {
     background-color: var(--bg-body);
     color: var(--text-main);
@@ -41,65 +44,220 @@ body {
     transition: background-color 0.3s, color 0.3s;
 }
 
-/* --- CARD STYLES --- */
-.card, .card-police, .stats-card {
-    background-color: var(--bg-card);
-    border: 1px solid var(--border-color);
+h1, h2, h3, h4, h5, h6 {
     color: var(--text-main);
-    border-radius: 8px;
-    /* Clean shadow for all cards */
-    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    font-weight: 700;
 }
 
-.card-header {
-    background-color: var(--bg-card) !important;
-    border-bottom: 1px solid var(--border-color);
-    color: var(--text-main);
-}
+/* --- TEXT VISIBILITY UTILITIES --- */
+/* Ensures Bootstrap colors remain visible in Dark Mode */
+[data-theme="dark"] .text-primary { color: #6ea8fe !important; }
+[data-theme="dark"] .text-secondary { color: #adb5bd !important; }
+[data-theme="dark"] .text-success { color: #75b798 !important; }
+[data-theme="dark"] .text-danger { color: #ea868f !important; }
+[data-theme="dark"] .text-warning { color: #ffda6a !important; }
+[data-theme="dark"] .text-info { color: #6edff6 !important; }
+[data-theme="dark"] .text-dark { color: #f8f9fa !important; }
+[data-theme="dark"] .text-muted { color: #b0b0b0 !important; }
 
-.stats-card {
-    transition: transform 0.2s;
-}
-.stats-card:hover {
-    transform: translateY(-5px);
-}
-
-/* --- LIST ITEMS --- */
-.list-group-item {
-    background-color: var(--bg-card);
-    color: var(--text-main);
-    border-color: var(--border-color);
-}
-.list-group-item:hover {
-    background-color: rgba(13, 110, 253, 0.05); /* Slight blue hover */
-}
-
-/* --- MAP --- */
-.map-container {
-    height: 100%;
-    width: 100%;
-    border-radius: 0 0 8px 8px;
-    z-index: 1;
+/* Force headings inside cards to be visible */
+[data-theme="dark"] .card-title,
+[data-theme="dark"] .stats-card h3 {
+    color: #ffffff !important;
 }
 
 /* --- NAVBAR --- */
 .navbar-police {
     background-color: var(--police-primary) !important;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+    padding: 0.8rem 1rem;
 }
-.navbar-brand, .nav-link { color: white !important; }
 
-/* --- INPUTS --- */
+.navbar-brand {
+    color: #ffffff !important;
+    font-size: 1.4rem;
+    font-weight: 700;
+}
+
+.navbar-police .nav-link {
+    color: rgba(255, 255, 255, 0.9) !important;
+}
+
+.navbar-police .nav-link:hover {
+    color: #ffffff !important;
+}
+
+.navbar-police .dropdown-menu {
+    background-color: var(--bg-card);
+    border-color: var(--border-color);
+}
+
+.navbar-police .dropdown-item {
+    color: var(--text-main);
+}
+
+.navbar-police .dropdown-item:hover {
+    background-color: var(--list-hover);
+}
+
+/* --- SIDEBAR --- */
+.sidebar {
+    background-color: var(--sidebar-bg);
+    border-right: 1px solid var(--border-color);
+    min-height: calc(100vh - 60px);
+}
+
+.sidebar .list-group-item {
+    background-color: transparent;
+    color: var(--text-main);
+    border: none;
+    padding: 12px 20px;
+    font-weight: 500;
+}
+
+.sidebar .list-group-item:hover {
+    background-color: var(--list-hover);
+    color: var(--police-primary);
+}
+
+.sidebar .list-group-item.active {
+    background-color: rgba(13, 110, 253, 0.1);
+    color: var(--police-primary);
+    border-left: 4px solid var(--police-primary);
+}
+
+/* --- CARDS --- */
+.card, .card-police {
+    background-color: var(--bg-card);
+    border: 1px solid var(--border-color);
+    color: var(--text-main);
+    border-radius: 8px;
+    box-shadow: var(--shadow-sm);
+}
+
+.card-header {
+    background-color: var(--bg-card) !important;
+    border-bottom: 1px solid var(--border-color);
+    color: var(--text-main);
+    font-weight: 700;
+    padding: 15px 20px;
+}
+
+.card-footer {
+    background-color: var(--bg-card) !important;
+    border-top: 1px solid var(--border-color);
+}
+
+/* --- STATS CARDS (Dashboard) --- */
+.stats-card {
+    background-color: var(--bg-card);
+    color: var(--text-main);
+    transition: transform 0.2s ease-in-out;
+    border: 1px solid var(--border-color);
+    position: relative;
+    overflow: hidden;
+}
+
+.stats-card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-md);
+}
+
+.stats-card h3 {
+    font-size: 1.8rem;
+    font-weight: 800;
+    margin-bottom: 0.25rem;
+    color: var(--text-main);
+}
+
+.stats-card i {
+    margin-bottom: 10px;
+}
+
+/* --- TABLES --- */
+.table {
+    color: var(--text-main);
+    border-color: var(--border-color);
+    margin-bottom: 0;
+}
+
+.table > :not(caption) > * > * {
+    background-color: var(--bg-card);
+    color: var(--text-main);
+    border-bottom-color: var(--border-color);
+    padding: 12px 15px;
+    vertical-align: middle;
+}
+
+/* Table Header */
+.table thead th {
+    background-color: rgba(0,0,0,0.03); /* Slight grey in light mode */
+    border-bottom: 2px solid var(--border-color);
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.85rem;
+    letter-spacing: 0.5px;
+}
+
+[data-theme="dark"] .table thead th {
+    background-color: #252525;
+    color: #ffffff;
+}
+
+/* Striped Rows */
+.table-striped > tbody > tr:nth-of-type(odd) > * {
+    background-color: rgba(0, 0, 0, 0.02);
+}
+
+[data-theme="dark"] .table-striped > tbody > tr:nth-of-type(odd) > * {
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
+/* Hover Rows */
+.table-hover > tbody > tr:hover > * {
+    background-color: rgba(13, 110, 253, 0.05);
+}
+
+[data-theme="dark"] .table-hover > tbody > tr:hover > * {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* --- FORMS --- */
 .form-control, .form-select {
     background-color: var(--input-bg);
     color: var(--text-main);
-    border-color: var(--border-color);
+    border: 1px solid var(--border-color);
+    padding: 10px 15px;
 }
-.form-control:focus {
+
+.form-control:focus, .form-select:focus {
     background-color: var(--input-bg);
     color: var(--text-main);
     border-color: var(--police-primary);
     box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+}
+
+[data-theme="dark"] ::placeholder {
+    color: #888;
+}
+
+.form-label {
+    color: var(--text-main);
+    font-weight: 500;
+}
+
+.form-text {
+    color: var(--text-muted);
+}
+
+.input-group-text {
+    background-color: rgba(0,0,0,0.05);
+    border-color: var(--border-color);
+    color: var(--text-main);
+}
+
+[data-theme="dark"] .input-group-text {
+    background-color: #2c2c2c;
 }
 
 /* --- BUTTONS --- */
@@ -107,21 +265,110 @@ body {
     background-color: var(--police-primary);
     color: white;
     border: none;
+    padding: 8px 16px;
+    font-weight: 500;
 }
+
 .btn-police:hover {
     background-color: var(--police-secondary);
     color: white;
 }
 
-/* --- MODAL FIXES --- */
+.btn-outline-primary {
+    color: var(--police-primary);
+    border-color: var(--police-primary);
+}
+
+.btn-outline-primary:hover {
+    background-color: var(--police-primary);
+    color: white;
+}
+
+/* Action buttons in tables */
+.btn-group-sm > .btn {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+}
+
+/* --- MODALS --- */
 .modal-content {
     background-color: var(--bg-card);
     color: var(--text-main);
     border: 1px solid var(--border-color);
+    box-shadow: var(--shadow-md);
 }
+
 .modal-header, .modal-footer {
     border-color: var(--border-color);
 }
+
+.modal-header .btn-close {
+    padding: 0.5rem 0.5rem;
+    margin: -0.5rem -0.5rem -0.5rem auto;
+}
+
+/* Fix Close Button visibility in Dark Mode */
 [data-theme="dark"] .btn-close {
     filter: invert(1) grayscale(100%) brightness(200%);
+}
+
+/* --- MAP & COMPONENTS --- */
+.map-container {
+    height: 100%;
+    min-height: 400px;
+    width: 100%;
+    background-color: #eee;
+    border-radius: 0 0 8px 8px;
+    z-index: 1;
+}
+
+/* Dashboard List Items */
+#incidentsList .list-group-item {
+    background-color: var(--bg-card);
+    color: var(--text-main);
+    border-color: var(--border-color);
+    transition: background-color 0.2s;
+}
+
+#incidentsList .list-group-item:hover {
+    background-color: var(--list-hover);
+}
+
+/* Incident Badges (Left Borders for visual status) */
+.unassigned-incident {
+    border-left: 4px solid #dc3545 !important;
+}
+
+.assigned-incident {
+    border-left: 4px solid #198754 !important;
+}
+
+/* Avatar for Profile */
+.avatar-circle-large {
+    width: 100px;
+    height: 100px;
+    background-color: var(--police-primary);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 2rem;
+    font-weight: bold;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+/* Leaflet Popup Styling */
+.leaflet-popup-content-wrapper {
+    background-color: var(--bg-card);
+    color: var(--text-main);
+    border-radius: 8px;
+}
+
+.leaflet-popup-tip {
+    background-color: var(--bg-card);
+}
+
+[data-theme="dark"] .leaflet-popup-content-wrapper {
+    border: 1px solid var(--border-color);
 }
