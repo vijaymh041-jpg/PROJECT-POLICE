@@ -1,52 +1,43 @@
 :root {
-    /* --- ORIGINAL BLUE THEME VARIABLES --- */
-    --police-primary: #0d6efd;
+    /* --- RESTORED BLUE THEME VARIABLES --- */
+    --police-primary: #0d6efd;    /* The "Police Blue" */
     --police-secondary: #034bb3;
     --police-accent: #ffc107;
     
-    /* Light Mode Defaults */
-    --bg-body: #f8f9fa;
-    --bg-card: #ffffff;
-    --text-main: #212529;
+    /* Light Mode Defaults (Blue/White Look) */
+    --bg-body: #f4f6f9;           /* Light gray background for contrast */
+    --bg-card: #ffffff;           /* White cards */
+    --text-main: #212529;         /* Dark text */
     --text-muted: #6c757d;
-    --border-color: #dee2e6;
+    --border-color: #e0e0e0;
     --input-bg: #ffffff;
-    --input-color: #212529;
 }
 
-/* --- DARK MODE OVERRIDES --- */
+/* --- DARK MODE OVERRIDES (Fixes Invisible Text) --- */
 [data-theme="dark"] {
     --bg-body: #121212;
     --bg-card: #1e1e1e;
     
-    /* Text Colors: Turn Black to White/Gray */
-    --text-main: #e0e0e0;
+    /* CRITICAL: Turn text White in Dark Mode */
+    --text-main: #ffffff;
     --text-muted: #b0b0b0;
     
     --border-color: #333;
-    
-    /* Dark Mode Inputs */
     --input-bg: #2d2d2d;
-    --input-color: #ffffff;
 }
 
-/* --- TEXT VISIBILITY FIXES FOR DARK MODE --- */
-/* Forces text to be visible when background is dark */
+/* --- VISIBILITY FIXES FOR DARK MODE --- */
+/* Forces specific element colors to pop in dark mode */
+[data-theme="dark"] .stats-card h3 { color: #ffffff !important; }
+[data-theme="dark"] .stats-card p { color: #cccccc !important; }
+[data-theme="dark"] .card-header { border-bottom-color: #333; }
+[data-theme="dark"] .text-dark { color: #f8f9fa !important; }
+
+/* Keep colored text bright in dark mode */
 [data-theme="dark"] .text-primary { color: #6ea8fe !important; }
-[data-theme="dark"] .text-secondary { color: #a0a0a0 !important; }
 [data-theme="dark"] .text-success { color: #75b798 !important; }
 [data-theme="dark"] .text-danger { color: #ea868f !important; }
 [data-theme="dark"] .text-warning { color: #ffda6a !important; }
-[data-theme="dark"] .text-info { color: #6edff6 !important; }
-[data-theme="dark"] .text-dark { color: #f8f9fa !important; }
-
-/* Ensure Headers and Stats are White in Dark Mode */
-[data-theme="dark"] h1, [data-theme="dark"] h2, [data-theme="dark"] h3, 
-[data-theme="dark"] h4, [data-theme="dark"] h5, [data-theme="dark"] h6 {
-    color: #ffffff !important;
-}
-
-/* --- COMPONENT STYLES --- */
 
 body {
     background-color: var(--bg-body);
@@ -56,23 +47,21 @@ body {
     transition: background-color 0.3s, color 0.3s;
 }
 
-/* Navbar - ALWAYS BLUE */
+/* --- NAVBAR (Always Blue) --- */
 .navbar-police {
     background-color: var(--police-primary) !important;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
+.navbar-brand, .nav-link { color: white !important; }
 
-.navbar-brand, .nav-link {
-    color: white !important;
-}
-
-/* Cards - Clean & White (or Dark Gray in Dark Mode) */
+/* --- CARDS (Clean White in Light Mode) --- */
 .card, .card-police {
     background-color: var(--bg-card);
     border: 1px solid var(--border-color);
     color: var(--text-main);
-    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.05);
     border-radius: 8px;
+    margin-bottom: 20px;
 }
 
 .card-header {
@@ -80,39 +69,46 @@ body {
     border-bottom: 1px solid var(--border-color);
     color: var(--text-main);
     font-weight: 600;
+    padding: 15px 20px;
 }
 
-/* --- STATS CARDS (Matching your Screenshots) --- */
+/* --- STATS CARDS (The Boxes with Numbers) --- */
 .stats-card {
     text-align: center;
-    padding: 20px;
+    padding: 25px 15px;
     background-color: var(--bg-card);
     border: 1px solid var(--border-color);
     border-radius: 8px;
     transition: transform 0.2s;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
 }
 
-/* Remove colored borders to match the clean white look in screenshots */
-.stats-card.assigned-stats, .stats-card.unassigned-stats {
-    border-left: 1px solid var(--border-color) !important;
+/* Hover effect for stats */
+.stats-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
 }
 
 .stats-card i {
-    font-size: 2rem;
-    margin-bottom: 10px;
-    /* Icons keep their colors */
+    font-size: 2.2rem;
+    margin-bottom: 15px;
 }
 
 .stats-card h3 {
-    font-size: 2rem;
+    font-size: 2.2rem;
     margin-bottom: 5px;
     font-weight: 700;
+    color: var(--text-main); /* Will be black in light, white in dark */
 }
 
-/* --- TABLE STYLES --- */
+/* --- TABLES --- */
 .table {
     color: var(--text-main);
-    border-color: var(--border-color);
+    margin-bottom: 0;
 }
 
 .table > :not(caption) > * > * {
@@ -121,24 +117,24 @@ body {
     border-bottom-color: var(--border-color);
 }
 
-/* Dark mode specific table fixes */
+/* Fix dark mode table stripes */
+[data-theme="dark"] .table-striped > tbody > tr:nth-of-type(odd) > * {
+    background-color: #2c2c2c;
+}
 [data-theme="dark"] .table-hover > tbody > tr:hover > * {
     background-color: #333;
 }
 
-/* Inputs */
-.form-control, .form-select {
-    background-color: var(--input-bg);
-    color: var(--input-color);
-    border: 1px solid var(--border-color);
+/* --- MAP & BADGES --- */
+.map-container {
+    height: 400px;
+    width: 100%;
+    border-radius: 0 0 8px 8px;
+    z-index: 1;
 }
 
-.form-control:focus {
-    border-color: var(--police-primary);
-    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
-    background-color: var(--input-bg);
-    color: var(--input-color);
-}
+/* Assignment Badges */
+.badge { font-weight: 500; padding: 0.5em 0.8em; }
 
 /* Buttons */
 .btn-police {
@@ -149,20 +145,4 @@ body {
 .btn-police:hover {
     background-color: var(--police-secondary);
     color: white;
-}
-
-/* Assignment Badges */
-.unassigned-incident {
-    border-left: 4px solid #dc3545 !important;
-}
-.assigned-incident {
-    border-left: 4px solid #198754 !important;
-}
-
-/* Map */
-.map-container {
-    height: 400px;
-    width: 100%;
-    border-radius: 4px;
-    z-index: 1;
 }
