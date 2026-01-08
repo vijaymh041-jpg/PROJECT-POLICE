@@ -183,6 +183,18 @@
                             <label class="form-label">Description</label>
                             <textarea class="form-control" name="description" rows="3"></textarea>
                         </div>
+                        
+                        <div class="col-12">
+                            <label class="form-label d-flex justify-content-between align-items-center">
+                                Select Location
+                                <button type="button" class="btn btn-sm btn-outline-primary" onclick="getCurrentLocation()">
+                                    <i class="fas fa-location-arrow me-1"></i> Use Current Location
+                                </button>
+                            </label>
+                            <div id="locationMap" style="height: 250px; width: 100%; border-radius: 4px; border: 1px solid #dee2e6;"></div>
+                            <small class="text-muted">Click on the map to manually set the location.</small>
+                        </div>
+
                         <div class="col-md-4">
                             <label class="form-label">Severity</label>
                             <select class="form-select" name="severity">
@@ -193,11 +205,11 @@
                         </div>
                         <div class="col-md-4">
                             <label class="form-label">Latitude</label>
-                            <input type="number" step="any" class="form-control" name="latitude" value="14.4644">
+                            <input type="number" step="any" class="form-control" name="latitude" id="inputLat" value="14.4644">
                         </div>
                         <div class="col-md-4">
                             <label class="form-label">Longitude</label>
-                            <input type="number" step="any" class="form-control" name="longitude" value="75.9218">
+                            <input type="number" step="any" class="form-control" name="longitude" id="inputLng" value="75.9218">
                         </div>
                     </div>
                 </form>
@@ -256,6 +268,8 @@
 <script>
     let map;
     let markers = [];
+    let locationMap;
+    let locationMarker;
 
     // --- FIX FOR STUCK SCREEN ---
     function cleanupModals() {
@@ -266,14 +280,59 @@
     }
 
     document.addEventListener('DOMContentLoaded', function() {
-        cleanupModals(); // Run immediately on load
+        cleanupModals(); 
         initializeMap();
     });
 
     // --- INCIDENT LOGIC ---
     function showAddIncidentModal() {
         cleanupModals();
-        new bootstrap.Modal(document.getElementById('addIncidentModal')).show();
+        const modal = new bootstrap.Modal(document.getElementById('addIncidentModal'));
+        modal.show();
+        
+        // Initialize location map
+        const modalEl = document.getElementById('addIncidentModal');
+        modalEl.addEventListener('shown.bs.modal', function () {
+            initializeLocationMap();
+        }, { once: true });
+    }
+
+    function initializeLocationMap() {
+        if (!locationMap) {
+            locationMap = L.map('locationMap').setView([14.4644, 75.9218], 13);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap'
+            }).addTo(locationMap);
+
+            locationMap.on('click', function(e) {
+                updateLocationInputs(e.latlng.lat, e.latlng.lng);
+            });
+        } else {
+            setTimeout(() => { locationMap.invalidateSize(); }, 100);
+        }
+    }
+
+    function getCurrentLocation() {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(position => {
+                const lat = position.coords.latitude;
+                const lng = position.coords.longitude;
+                updateLocationInputs(lat, lng);
+                if(locationMap) locationMap.setView([lat, lng], 16);
+            }, () => {
+                alert("Location access denied or unavailable.");
+            });
+        } else {
+            alert("Geolocation not supported.");
+        }
+    }
+
+    function updateLocationInputs(lat, lng) {
+        document.getElementById('inputLat').value = lat.toFixed(6);
+        document.getElementById('inputLng').value = lng.toFixed(6);
+        
+        if (locationMarker) locationMap.removeLayer(locationMarker);
+        locationMarker = L.marker([lat, lng]).addTo(locationMap);
     }
 
     function submitNewIncident() {
@@ -337,7 +396,7 @@
         });
     }
 
-    // --- MAP LOGIC ---
+    // --- MAIN MAP LOGIC ---
     function initializeMap() {
         if (document.getElementById('map')) {
             map = L.map('map').setView([14.4644, 75.9218], 13);

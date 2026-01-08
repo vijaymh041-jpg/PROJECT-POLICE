@@ -169,6 +169,12 @@
 
                         <td>
                             <div class="btn-group btn-group-sm">
+                                <button class="btn btn-outline-primary" title="View Location" 
+                                        data-lat="{{ incident.latitude }}" 
+                                        data-lng="{{ incident.longitude }}"
+                                        onclick="openMap(this)">
+                                    <i class="fas fa-map-marker-alt"></i>
+                                </button>
                                 <button class="btn btn-outline-success assign-officer-btn" title="Assign Officer">
                                     <i class="fas fa-user-plus"></i>
                                 </button>
@@ -192,100 +198,7 @@
     </div>
 </div>
 
-<div class="modal fade" id="addIncidentModal" tabindex="-1" data-bs-backdrop="static">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Report New Incident</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <form id="addIncidentForm">
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label">Title *</label>
-                            <input type="text" class="form-control" name="title" required>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label">Type</label>
-                            <select class="form-select" name="incident_type">
-                                <option>Theft</option>
-                                <option>Accident</option>
-                                <option>Public Disturbance</option>
-                                <option>Traffic Violation</option>
-                                <option>Other</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Description</label>
-                        <textarea class="form-control" name="description" rows="3"></textarea>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-4 mb-3">
-                            <label class="form-label">Severity</label>
-                            <select class="form-select" name="severity">
-                                <option value="low">Low</option>
-                                <option value="medium" selected>Medium</option>
-                                <option value="high">High</option>
-                            </select>
-                        </div>
-                        <div class="col-md-4 mb-3">
-                            <label class="form-label">Latitude</label>
-                            <input type="number" step="any" class="form-control" name="latitude" value="14.4644">
-                        </div>
-                        <div class="col-md-4 mb-3">
-                            <label class="form-label">Longitude</label>
-                            <input type="number" step="any" class="form-control" name="longitude" value="75.9218">
-                        </div>
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary" onclick="submitNewIncident()">Submit Report</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<div class="modal fade" id="assignOfficerModal" tabindex="-1" data-bs-backdrop="static">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Assign Officer</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <input type="hidden" id="assignIncidentId">
-                <input type="hidden" id="assignIncidentSource">
-                <div class="mb-3">
-                    <label class="form-label">Select Officer</label>
-                    <select class="form-select" id="officerSelect">
-                        <option value="">Loading...</option>
-                    </select>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary" onclick="submitAssignment()">Assign</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<div class="modal fade" id="detailsModal" tabindex="-1">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Incident Details</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body" id="detailsContent">
-                </div>
-        </div>
-    </div>
-</div>
+{% include 'incidents_modals.html' ignore missing %}
 
 {% endblock %}
 
@@ -295,16 +208,17 @@
     function cleanupModals() {
         document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
         document.body.classList.remove('modal-open');
-        document.body.style = '';
+        document.body.style.overflow = 'auto';
+        document.body.style.paddingRight = '0';
     }
 
     // --- SETUP LISTENERS ---
     document.addEventListener('DOMContentLoaded', function() {
-        cleanupModals(); // Safety run
+        cleanupModals();
 
         const tbody = document.querySelector('tbody');
         
-        // Use Event Delegation for better performance
+        // Use Event Delegation
         tbody.addEventListener('click', function(e) {
             // Assign Button
             const assignBtn = e.target.closest('.assign-officer-btn');
@@ -324,13 +238,29 @@
 
     // --- FUNCTIONS ---
 
+    // FIX: Updated Map Opener
+    function openMap(element) {
+        const lat = element.getAttribute('data-lat');
+        const lng = element.getAttribute('data-lng');
+        
+        if(lat && lng && lat !== 'None' && lng !== 'None') {
+            window.open(`https://www.google.com/maps?q=${lat},${lng}`, '_blank');
+        } else {
+            alert("Location coordinates not available for this incident.");
+        }
+    }
+
     function showAddIncidentModal() {
         cleanupModals();
         new bootstrap.Modal(document.getElementById('addIncidentModal')).show();
     }
-
+    
+    // Placeholder functions for modals if they are in the include file or need re-definition
+    // Ensure these match what's in your modals file or define them here if missing
+    
     function submitNewIncident() {
         const form = document.getElementById('addIncidentForm');
+        if(!form) return;
         const data = Object.fromEntries(new FormData(form).entries());
         
         fetch('/api/incidents', {
@@ -349,7 +279,6 @@
     function openAssignModal(id, source) {
         document.getElementById('assignIncidentId').value = id;
         document.getElementById('assignIncidentSource').value = source;
-        
         const select = document.getElementById('officerSelect');
         select.innerHTML = '<option>Loading...</option>';
         
@@ -390,20 +319,23 @@
         fetch(`/api/incidents/${id}/details?source=${source}`)
             .then(res => res.json())
             .then(data => {
-                document.getElementById('detailsContent').innerHTML = `
-                    <h4>${data.title}</h4>
-                    <p class="text-muted">ID: ${data.incident_id}</p>
-                    <hr>
-                    <div class="row">
-                        <div class="col-md-6"><p><strong>Type:</strong> ${data.incident_type}</p></div>
-                        <div class="col-md-6"><p><strong>Severity:</strong> ${data.severity}</p></div>
-                        <div class="col-md-6"><p><strong>Status:</strong> ${data.status}</p></div>
-                        <div class="col-md-6"><p><strong>Reported By:</strong> ${data.reported_by}</p></div>
-                    </div>
-                    <p><strong>Description:</strong><br>${data.description}</p>
-                    <p><strong>Location:</strong><br>${data.address}</p>
-                `;
-                new bootstrap.Modal(document.getElementById('detailsModal')).show();
+                const content = document.getElementById('detailsContent');
+                if(content) {
+                    content.innerHTML = `
+                        <h4>${data.title}</h4>
+                        <p class="text-muted">ID: ${data.incident_id}</p>
+                        <hr>
+                        <div class="row">
+                            <div class="col-md-6"><p><strong>Type:</strong> ${data.incident_type}</p></div>
+                            <div class="col-md-6"><p><strong>Severity:</strong> ${data.severity}</p></div>
+                            <div class="col-md-6"><p><strong>Status:</strong> ${data.status}</p></div>
+                            <div class="col-md-6"><p><strong>Reported By:</strong> ${data.reported_by}</p></div>
+                        </div>
+                        <p><strong>Description:</strong><br>${data.description}</p>
+                        <p><strong>Location:</strong><br>${data.address}</p>
+                    `;
+                    new bootstrap.Modal(document.getElementById('detailsModal')).show();
+                }
             });
     }
 
@@ -418,7 +350,7 @@
     function filterByAssignment(type) {
         const rows = document.querySelectorAll('.incident-row');
         document.querySelectorAll('.btn-group .btn').forEach(b => b.classList.remove('active'));
-        event.target.classList.add('active');
+        if(event && event.target) event.target.classList.add('active');
 
         rows.forEach(row => {
             const isAssigned = row.dataset.isAssigned === 'True';
