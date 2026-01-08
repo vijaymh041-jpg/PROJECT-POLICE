@@ -1,44 +1,38 @@
 :root {
-    /* --- RESTORED BLUE THEME VARIABLES --- */
-    --police-primary: #0d6efd;    /* The "Police Blue" */
+    /* --- BRAND COLORS --- */
+    --police-primary: #0d6efd;
     --police-secondary: #034bb3;
     --police-accent: #ffc107;
     
-    /* Light Mode Defaults (Blue/White Look) */
-    --bg-body: #f4f6f9;           /* Light gray background for contrast */
-    --bg-card: #ffffff;           /* White cards */
-    --text-main: #212529;         /* Dark text */
+    /* --- LIGHT MODE --- */
+    --bg-body: #f4f6f9;
+    --bg-card: #ffffff;
+    --text-main: #212529;
     --text-muted: #6c757d;
-    --border-color: #e0e0e0;
+    --border-color: #dee2e6;
     --input-bg: #ffffff;
 }
 
-/* --- DARK MODE OVERRIDES (Fixes Invisible Text) --- */
+/* --- DARK MODE FIXES (Crucial for Visibility) --- */
 [data-theme="dark"] {
     --bg-body: #121212;
     --bg-card: #1e1e1e;
-    
-    /* CRITICAL: Turn text White in Dark Mode */
     --text-main: #ffffff;
     --text-muted: #b0b0b0;
-    
-    --border-color: #333;
+    --border-color: #333333;
     --input-bg: #2d2d2d;
 }
 
-/* --- VISIBILITY FIXES FOR DARK MODE --- */
-/* Forces specific element colors to pop in dark mode */
-[data-theme="dark"] .stats-card h3 { color: #ffffff !important; }
-[data-theme="dark"] .stats-card p { color: #cccccc !important; }
-[data-theme="dark"] .card-header { border-bottom-color: #333; }
-[data-theme="dark"] .text-dark { color: #f8f9fa !important; }
-
-/* Keep colored text bright in dark mode */
+/* Force Text Colors in Dark Mode so they are visible */
 [data-theme="dark"] .text-primary { color: #6ea8fe !important; }
+[data-theme="dark"] .text-info { color: #6edff6 !important; }
 [data-theme="dark"] .text-success { color: #75b798 !important; }
-[data-theme="dark"] .text-danger { color: #ea868f !important; }
 [data-theme="dark"] .text-warning { color: #ffda6a !important; }
+[data-theme="dark"] .text-danger { color: #ea868f !important; }
+[data-theme="dark"] .text-secondary { color: #adb5bd !important; }
+[data-theme="dark"] .text-muted { color: #d0d0d0 !important; }
 
+/* GLOBAL RESET */
 body {
     background-color: var(--bg-body);
     color: var(--text-main);
@@ -47,96 +41,68 @@ body {
     transition: background-color 0.3s, color 0.3s;
 }
 
-/* --- NAVBAR (Always Blue) --- */
-.navbar-police {
-    background-color: var(--police-primary) !important;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-.navbar-brand, .nav-link { color: white !important; }
-
-/* --- CARDS (Clean White in Light Mode) --- */
-.card, .card-police {
+/* --- CARD STYLES --- */
+.card, .card-police, .stats-card {
     background-color: var(--bg-card);
     border: 1px solid var(--border-color);
     color: var(--text-main);
-    box-shadow: 0 2px 6px rgba(0,0,0,0.05);
     border-radius: 8px;
-    margin-bottom: 20px;
+    /* Clean shadow for all cards */
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
 }
 
 .card-header {
     background-color: var(--bg-card) !important;
     border-bottom: 1px solid var(--border-color);
     color: var(--text-main);
-    font-weight: 600;
-    padding: 15px 20px;
 }
 
-/* --- STATS CARDS (The Boxes with Numbers) --- */
 .stats-card {
-    text-align: center;
-    padding: 25px 15px;
-    background-color: var(--bg-card);
-    border: 1px solid var(--border-color);
-    border-radius: 8px;
     transition: transform 0.2s;
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
 }
-
-/* Hover effect for stats */
 .stats-card:hover {
     transform: translateY(-5px);
-    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
 }
 
-.stats-card i {
-    font-size: 2.2rem;
-    margin-bottom: 15px;
-}
-
-.stats-card h3 {
-    font-size: 2.2rem;
-    margin-bottom: 5px;
-    font-weight: 700;
-    color: var(--text-main); /* Will be black in light, white in dark */
-}
-
-/* --- TABLES --- */
-.table {
-    color: var(--text-main);
-    margin-bottom: 0;
-}
-
-.table > :not(caption) > * > * {
+/* --- LIST ITEMS --- */
+.list-group-item {
     background-color: var(--bg-card);
     color: var(--text-main);
-    border-bottom-color: var(--border-color);
+    border-color: var(--border-color);
+}
+.list-group-item:hover {
+    background-color: rgba(13, 110, 253, 0.05); /* Slight blue hover */
 }
 
-/* Fix dark mode table stripes */
-[data-theme="dark"] .table-striped > tbody > tr:nth-of-type(odd) > * {
-    background-color: #2c2c2c;
-}
-[data-theme="dark"] .table-hover > tbody > tr:hover > * {
-    background-color: #333;
-}
-
-/* --- MAP & BADGES --- */
+/* --- MAP --- */
 .map-container {
-    height: 400px;
+    height: 100%;
     width: 100%;
     border-radius: 0 0 8px 8px;
     z-index: 1;
 }
 
-/* Assignment Badges */
-.badge { font-weight: 500; padding: 0.5em 0.8em; }
+/* --- NAVBAR --- */
+.navbar-police {
+    background-color: var(--police-primary) !important;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+}
+.navbar-brand, .nav-link { color: white !important; }
 
-/* Buttons */
+/* --- INPUTS --- */
+.form-control, .form-select {
+    background-color: var(--input-bg);
+    color: var(--text-main);
+    border-color: var(--border-color);
+}
+.form-control:focus {
+    background-color: var(--input-bg);
+    color: var(--text-main);
+    border-color: var(--police-primary);
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+}
+
+/* --- BUTTONS --- */
 .btn-police {
     background-color: var(--police-primary);
     color: white;
@@ -145,4 +111,17 @@ body {
 .btn-police:hover {
     background-color: var(--police-secondary);
     color: white;
+}
+
+/* --- MODAL FIXES --- */
+.modal-content {
+    background-color: var(--bg-card);
+    color: var(--text-main);
+    border: 1px solid var(--border-color);
+}
+.modal-header, .modal-footer {
+    border-color: var(--border-color);
+}
+[data-theme="dark"] .btn-close {
+    filter: invert(1) grayscale(100%) brightness(200%);
 }

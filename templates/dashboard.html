@@ -2,383 +2,386 @@
 
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h2>All Incidents - Davanagere Police</h2>
-    <div>
-        <button class="btn btn-outline-primary me-2" onclick="location.reload()">
+    <h2 class="fw-bold mb-0">Dashboard - Davanagere</h2>
+    <div class="d-flex gap-2">
+        <button class="btn btn-outline-primary" onclick="location.reload()">
             <i class="fas fa-sync-alt me-1"></i> Refresh
         </button>
         <button class="btn btn-police" onclick="showAddIncidentModal()">
-            <i class="fas fa-plus me-1"></i> New Incident
+            <i class="fas fa-plus me-1"></i> Report Incident
+        </button>
+        <button class="btn btn-success" onclick="showAddOfficerModal()">
+            <i class="fas fa-user-plus me-1"></i> Add Officer
         </button>
     </div>
 </div>
 
-<div class="row mb-4">
-    <div class="col-md-2 mb-3">
-        <div class="card card-police stats-card">
-            <i class="fas fa-list"></i>
-            <h3 id="totalIncidents">{{ total_incidents }}</h3>
-            <p>Total Incidents</p>
-        </div>
-    </div>
-    <div class="col-md-2 mb-3">
-        <div class="card card-police stats-card">
-            <i class="fas fa-shield-alt"></i>
-            <h3 id="policeCount">{{ police_count }}</h3>
-            <p>Police Reports</p>
-        </div>
-    </div>
-    <div class="col-md-2 mb-3">
-        <div class="card card-police stats-card">
-            <i class="fas fa-users"></i>
-            <h3 id="publicCount">{{ public_count }}</h3>
-            <p>Public Reports</p>
-        </div>
-    </div>
-    <div class="col-md-2 mb-3">
-        <div class="card card-police stats-card">
-            <i class="fas fa-exclamation-triangle"></i>
-            <h3 id="highSeverityCount">{{ high_severity_count }}</h3>
-            <p>High Severity</p>
-        </div>
-    </div>
-    <div class="col-md-2 mb-3">
-        <div class="card card-police stats-card assigned-stats">
-            <i class="fas fa-user-check"></i>
-            <h3 id="assignedCount">{{ assigned_count }}</h3>
-            <p>Assigned</p>
-        </div>
-    </div>
-    <div class="col-md-2 mb-3">
-        <div class="card card-police stats-card unassigned-stats">
-            <i class="fas fa-user-times"></i>
-            <h3 id="unassignedCount">{{ unassigned_count }}</h3>
-            <p>Unassigned</p>
-        </div>
-    </div>
-</div>
-
-<div class="row mb-3">
-    <div class="col-md-12">
-        <div class="card card-police">
-            <div class="card-body py-2">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <small class="text-muted">Filter by assignment:</small>
-                        <div class="btn-group btn-group-sm ms-2">
-                            <button type="button" class="btn btn-outline-primary active" onclick="filterByAssignment('all')">
-                                All Cases
-                            </button>
-                            <button type="button" class="btn btn-outline-success" onclick="filterByAssignment('assigned')">
-                                <i class="fas fa-user-check me-1"></i>Assigned
-                            </button>
-                            <button type="button" class="btn btn-outline-danger" onclick="filterByAssignment('unassigned')">
-                                <i class="fas fa-user-times me-1"></i>Unassigned
-                            </button>
-                        </div>
-                    </div>
-                    <div>
-                        <small class="text-muted">
-                            Showing <span id="visibleCount">{{ total_incidents }}</span> of {{ total_incidents }} incidents
-                        </small>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<div class="card card-police">
-    <div class="card-header d-flex justify-content-between align-items-center">
-        <h5 class="mb-0">Incident Records (Both Collections)</h5>
-        <div class="input-group" style="width: 300px;">
-            <input type="text" class="form-control" placeholder="Search incidents..." id="searchInput">
-            <button class="btn btn-outline-secondary" type="button" onclick="searchIncidents()">
-                <i class="fas fa-search"></i>
-            </button>
-        </div>
-    </div>
-    <div class="card-body p-0">
-        <div class="table-responsive">
-            <table class="table table-hover table-striped mb-0" id="incidentsTable">
-                <thead class="table-light">
-                    <tr>
-                        <th>Assignment</th>
-                        <th>Source</th>
-                        <th>Title</th>
-                        <th>Type</th>
-                        <th>Severity</th>
-                        <th>Status</th>
-                        <th>Location</th>
-                        <th>Assigned Officer</th>
-                        <th>Reported</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for incident in all_incidents %}
-                    <tr class="incident-row {% if not incident.is_assigned %}unassigned-incident{% else %}assigned-incident{% endif %}" 
-                        data-incident-id="{{ incident._id }}" 
-                        data-latitude="{{ incident.latitude }}" 
-                        data-longitude="{{ incident.longitude }}"
-                        data-title="{{ incident.title }}"
-                        data-address="{{ incident.address }}"
-                        data-source="{{ incident.source }}"
-                        data-is-assigned="{{ incident.is_assigned }}">
-                        <td class="assignment-status">
-                            {% if incident.is_assigned %}
-                            <span class="badge bg-success assigned-badge">
-                                <i class="fas fa-user-check me-1"></i>Assigned
-                            </span>
-                            {% else %}
-                            <span class="badge bg-danger unassigned-badge">
-                                <i class="fas fa-user-times me-1"></i>Unassigned
-                            </span>
-                            {% endif %}
-                        </td>
-                        <td>
-                            {% if incident.source == 'police' %}
-                            <span class="badge bg-primary">
-                                <i class="fas fa-shield-alt me-1"></i>Police
-                            </span>
-                            {% else %}
-                            <span class="badge bg-secondary">
-                                <i class="fas fa-user me-1"></i>Public
-                            </span>
-                            {% endif %}
-                        </td>
-                        <td>
-                            <div class="fw-bold">{{ incident.title|default('No Title', true) }}</div>
-                            <small class="text-muted">
-                                {% if incident.description %}
-                                    {{ incident.description[:50] }}...
-                                {% else %}
-                                    No description available
-                                {% endif %}
-                            </small>
-                        </td>
-                        <td>{{ incident.incident_type|default('Unknown', true) }}</td>
-                        <td>
-                            <span class="badge bg-{{ 'danger' if incident.severity == 'high' else 'warning' if incident.severity == 'medium' else 'success' }}">
-                                {{ incident.severity|default('medium', true)|title }}
-                            </span>
-                        </td>
-                        <td>
-                            <span class="badge bg-{{ 'primary' if incident.status == 'active' else 'success' if incident.status == 'resolved' else 'secondary' }}">
-                                {{ incident.status|default('pending', true)|title }}
-                            </span>
-                        </td>
-                        <td>
-                            <div class="d-flex align-items-center" title="{{ incident.address }}">
-                                <i class="fas fa-map-marker-alt text-danger me-2"></i>
-                                <span>{{ incident.address[:20] }}...</span>
-                            </div>
-                        </td>
-                        <td>
-                            {% if incident.assigned_officer and incident.assigned_officer != 'Unassigned' %}
-                            <span class="badge bg-info text-dark">
-                                <i class="fas fa-user me-1"></i>{{ incident.assigned_officer }}
-                            </span>
-                            {% else %}
-                            <span class="badge bg-secondary">
-                                <i class="fas fa-user-slash me-1"></i>Unassigned
-                            </span>
-                            {% endif %}
-                        </td>
-                        <td>
-                            {% if incident.created_at %}
-                            <small>{{ incident.created_at.strftime('%Y-%m-%d %H:%M') }}</small>
-                            {% else %}
-                            <small class="text-muted">Unknown</small>
-                            {% endif %}
-                        </td>
-                        <td>
-                            <div class="btn-group btn-group-sm">
-                                <button class="btn btn-outline-primary get-directions-btn" title="Get Directions">
-                                    <i class="fas fa-directions"></i>
-                                </button>
-                                {% if incident.source == 'police' and current_user.username == incident.reported_by %}
-                                <button class="btn btn-outline-warning edit-incident-btn" title="Edit">
-                                    <i class="fas fa-edit"></i>
-                                </button>
-                                {% endif %}
-                                <button class="btn btn-outline-success assign-officer-btn" title="Assign Officer">
-                                    <i class="fas fa-user-plus"></i>
-                                </button>
-                                <button class="btn btn-outline-info view-details-btn" title="Details">
-                                    <i class="fas fa-eye"></i>
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
-                    {% else %}
-                    <tr>
-                        <td colspan="10" class="text-center text-muted py-5">
-                            <i class="fas fa-inbox fa-3x mb-3"></i>
-                            <h5>No Incidents Found</h5>
-                            <p>No incidents have been reported in either collection.</p>
-                            <button class="btn btn-police mt-2" onclick="showAddIncidentModal()">
-                                <i class="fas fa-plus me-2"></i>Report First Incident
-                            </button>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-    </div>
-    <div class="card-footer">
-        <div class="d-flex justify-content-between align-items-center">
-            <small class="text-muted">
-                Showing <strong>{{ total_incidents }}</strong> incident(s) from both collections
-            </small>
-        </div>
-    </div>
-</div>
-
-<div class="row mt-4">
-    <div class="col-md-4">
-        <div class="card card-police h-100">
-            <div class="card-header">
-                <h6 class="mb-0"><i class="fas fa-bolt me-2"></i>Quick Actions</h6>
-            </div>
-            <div class="card-body">
-                <div class="d-grid gap-2">
-                    <a href="{{ url_for('export_csv') }}" class="btn btn-outline-primary btn-sm">
-                        <i class="fas fa-download me-2"></i>Export to CSV
-                    </a>
-                    <button class="btn btn-outline-success btn-sm" onclick="printReport()">
-                        <i class="fas fa-print me-2"></i>Print Report
-                    </button>
-                    <a href="{{ url_for('reports') }}" class="btn btn-outline-info btn-sm">
-                        <i class="fas fa-chart-bar me-2"></i>Generate Analytics
-                    </a>
-                </div>
+<div class="row row-cols-2 row-cols-md-3 row-cols-xl-6 g-3 mb-4">
+    <div class="col">
+        <div class="card stats-card h-100 border-start border-4 border-primary shadow-sm">
+            <div class="card-body d-flex flex-column align-items-center justify-content-center py-3">
+                <i class="fas fa-list fa-2x text-primary mb-2"></i>
+                <h3 class="fw-bold mb-0" id="totalIncidents">{{ total_incidents }}</h3>
+                <small class="text-muted fw-bold">Total</small>
             </div>
         </div>
     </div>
     
-    <div class="col-md-8">
-        <div class="card card-police h-100">
-            <div class="card-header">
-                <h6 class="mb-0"><i class="fas fa-chart-pie me-2"></i>Incident Distribution</h6>
+    <div class="col">
+        <div class="card stats-card h-100 border-start border-4 border-info shadow-sm">
+            <div class="card-body d-flex flex-column align-items-center justify-content-center py-3">
+                <i class="fas fa-shield-alt fa-2x text-info mb-2"></i>
+                <h3 class="fw-bold mb-0" id="policeCount">{{ police_count }}</h3>
+                <small class="text-muted fw-bold">Police</small>
             </div>
-            <div class="card-body">
-                <div class="row text-center">
-                    <div class="col-md-3">
-                        <div class="border rounded p-3 mb-2">
-                            <div class="text-primary fw-bold fs-4">{{ police_count }}</div>
-                            <small class="text-muted">Police Reports</small>
-                        </div>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="border rounded p-3 mb-2">
-                            <div class="text-secondary fw-bold fs-4">{{ public_count }}</div>
-                            <small class="text-muted">Public Reports</small>
-                        </div>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="border rounded p-3 mb-2">
-                            <div class="text-success fw-bold fs-4">{{ assigned_count }}</div>
-                            <small class="text-muted">Assigned</small>
-                        </div>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="border rounded p-3 mb-2">
-                            <div class="text-danger fw-bold fs-4">{{ unassigned_count }}</div>
-                            <small class="text-muted">Unassigned</small>
-                        </div>
-                    </div>
-                </div>
+        </div>
+    </div>
+
+    <div class="col">
+        <div class="card stats-card h-100 border-start border-4 border-secondary shadow-sm">
+            <div class="card-body d-flex flex-column align-items-center justify-content-center py-3">
+                <i class="fas fa-users fa-2x text-secondary mb-2"></i>
+                <h3 class="fw-bold mb-0" id="publicCount">{{ public_count }}</h3>
+                <small class="text-muted fw-bold">Public</small>
+            </div>
+        </div>
+    </div>
+
+    <div class="col">
+        <div class="card stats-card h-100 border-start border-4 border-warning shadow-sm">
+            <div class="card-body d-flex flex-column align-items-center justify-content-center py-3">
+                <i class="fas fa-exclamation-triangle fa-2x text-warning mb-2"></i>
+                <h3 class="fw-bold mb-0">{{ high_severity_count }}</h3>
+                <small class="text-muted fw-bold">High Sev</small>
+            </div>
+        </div>
+    </div>
+
+    <div class="col">
+        <div class="card stats-card h-100 border-start border-4 border-success shadow-sm">
+            <div class="card-body d-flex flex-column align-items-center justify-content-center py-3">
+                <i class="fas fa-user-check fa-2x text-success mb-2"></i>
+                <h3 class="fw-bold mb-0">{{ assigned_count }}</h3>
+                <small class="text-muted fw-bold">Assigned</small>
+            </div>
+        </div>
+    </div>
+
+    <div class="col">
+        <div class="card stats-card h-100 border-start border-4 border-danger shadow-sm">
+            <div class="card-body d-flex flex-column align-items-center justify-content-center py-3">
+                <i class="fas fa-user-times fa-2x text-danger mb-2"></i>
+                <h3 class="fw-bold mb-0">{{ unassigned_count }}</h3>
+                <small class="text-muted fw-bold">Unassigned</small>
             </div>
         </div>
     </div>
 </div>
 
-{% include 'incidents_modals.html' ignore missing %} 
+<div class="row g-4">
+    <div class="col-lg-6">
+        <div class="card card-police h-100 shadow-sm">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0 fw-bold"><i class="fas fa-stream me-2"></i>Recent Activity</h5>
+                <div class="input-group input-group-sm" style="width: 200px;">
+                    <input type="text" class="form-control" placeholder="Search..." id="searchInput" onkeyup="searchIncidents()">
+                    <span class="input-group-text"><i class="fas fa-search"></i></span>
+                </div>
+            </div>
+            <div class="card-body p-0" style="height: 450px; overflow-y: auto;">
+                <div class="list-group list-group-flush" id="incidentsList">
+                    {% for incident in incidents %}
+                    <div class="list-group-item list-group-item-action incident-item p-3 border-bottom" 
+                         style="cursor: pointer;"
+                         data-lat="{{ incident.latitude }}" 
+                         data-lng="{{ incident.longitude }}"
+                         onclick="panToIncident(this)">
+                        
+                        <div class="d-flex justify-content-between align-items-start mb-1">
+                            <div>
+                                <h6 class="mb-0 fw-bold">{{ incident.title }}</h6>
+                                <div class="small text-muted mt-1">
+                                    <i class="fas fa-map-marker-alt text-danger me-1"></i>{{ incident.address[:40] }}...
+                                </div>
+                            </div>
+                            <span class="badge bg-{{ 'danger' if incident.severity == 'high' else 'warning' if incident.severity == 'medium' else 'success' }} rounded-pill">
+                                {{ incident.severity|title }}
+                            </span>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between align-items-center mt-2">
+                            <small class="text-muted">
+                                {% if incident.source == 'police' %}
+                                    <i class="fas fa-shield-alt text-primary"></i> Police
+                                {% else %}
+                                    <i class="fas fa-user text-secondary"></i> Public
+                                {% endif %}
+                                &bull; {{ incident.created_at.strftime('%H:%M') }}
+                            </small>
+                            
+                            {% if incident.is_assigned %}
+                                <span class="badge bg-success bg-opacity-10 text-success border border-success px-2">Assigned</span>
+                            {% else %}
+                                <span class="badge bg-danger bg-opacity-10 text-danger border border-danger px-2">Unassigned</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="d-flex flex-column align-items-center justify-content-center h-100 text-muted p-5">
+                        <i class="fas fa-inbox fa-3x mb-3 text-secondary"></i>
+                        <p class="mb-0">No recent incidents found.</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            <div class="card-footer text-center bg-transparent border-top-0 pb-3">
+                <a href="{{ url_for('incidents') }}" class="btn btn-outline-primary w-100">View Full Incident History</a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-6">
+        <div class="card card-police h-100 shadow-sm">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0 fw-bold"><i class="fas fa-map-marked-alt me-2"></i>Live Map</h5>
+                <button class="btn btn-sm btn-outline-secondary" onclick="refreshMap()">
+                    <i class="fas fa-compress me-1"></i> Reset View
+                </button>
+            </div>
+            <div class="card-body p-0 position-relative">
+                <div id="map" class="map-container" style="min-height: 500px; width: 100%;"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="addIncidentModal" tabindex="-1" data-bs-backdrop="static">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold">Report New Incident</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addIncidentForm">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Title *</label>
+                            <input type="text" class="form-control" name="title" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Type</label>
+                            <select class="form-select" name="incident_type">
+                                <option>Theft</option>
+                                <option>Accident</option>
+                                <option>Public Disturbance</option>
+                                <option>Traffic Violation</option>
+                                <option>Other</option>
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Description</label>
+                            <textarea class="form-control" name="description" rows="3"></textarea>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Severity</label>
+                            <select class="form-select" name="severity">
+                                <option value="low">Low</option>
+                                <option value="medium" selected>Medium</option>
+                                <option value="high">High</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Latitude</label>
+                            <input type="number" step="any" class="form-control" name="latitude" value="14.4644">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Longitude</label>
+                            <input type="number" step="any" class="form-control" name="longitude" value="75.9218">
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-police" onclick="submitNewIncident()">Submit Report</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="addOfficerModal" tabindex="-1" data-bs-backdrop="static">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold">Add New Officer</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="officerForm">
+                    <div class="mb-3">
+                        <label class="form-label">Full Name *</label>
+                        <input type="text" name="full_name" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Badge Number *</label>
+                        <input type="text" name="badge_number" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Designation *</label>
+                        <select name="designation" class="form-select" required>
+                            <option value="Police Officer">Police Officer</option>
+                            <option value="Inspector">Inspector</option>
+                            <option value="Sub-Inspector">Sub-Inspector</option>
+                            <option value="ACP">ACP</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Email *</label>
+                        <input type="email" name="email" class="form-control" required>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-success" onclick="submitOfficer()">Add Officer</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 {% endblock %}
 
 {% block scripts %}
-<script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
 <script>
-// IMPORTANT: Clean JS logic to prevent "stuck" screen
-// 1. We use data attributes, not template variables in JS
-// 2. We attach listeners after DOM load
+    let map;
+    let markers = [];
 
-document.addEventListener('DOMContentLoaded', function() {
-    // Re-attach event listeners for action buttons
-    attachEventListeners();
-});
+    // --- FIX FOR STUCK SCREEN ---
+    function cleanupModals() {
+        document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+        document.body.classList.remove('modal-open');
+        document.body.style.overflow = 'auto';
+        document.body.style.paddingRight = '0';
+    }
 
-// Robust Filter Function
-function filterByAssignment(status) {
-    const tbody = document.querySelector('#incidentsTable tbody');
-    const allIncidentRows = tbody.querySelectorAll('tr.incident-row'); 
-    let visibleCount = 0;
-
-    // Update buttons
-    document.querySelectorAll('.btn-group .btn').forEach(btn => btn.classList.remove('active'));
-    if (event && event.target) event.target.classList.add('active');
-
-    allIncidentRows.forEach(row => {
-        // Safe check for string 'True'/'False' from Python
-        const isAssigned = (row.dataset.isAssigned === 'True' || row.dataset.isAssigned === 'true');
-        let shouldShow = false;
-
-        if (status === 'all') shouldShow = true;
-        else if (status === 'assigned') shouldShow = isAssigned;
-        else if (status === 'unassigned') shouldShow = !isAssigned;
-
-        row.style.display = shouldShow ? '' : 'none';
-        if(shouldShow) visibleCount++;
+    document.addEventListener('DOMContentLoaded', function() {
+        cleanupModals(); // Run immediately on load
+        initializeMap();
     });
 
-    // Update count display
-    const countSpan = document.getElementById('visibleCount');
-    if(countSpan) countSpan.textContent = visibleCount;
-}
+    // --- INCIDENT LOGIC ---
+    function showAddIncidentModal() {
+        cleanupModals();
+        new bootstrap.Modal(document.getElementById('addIncidentModal')).show();
+    }
 
-// Function to handle ALL button clicks safely
-function attachEventListeners() {
-    // Directions
-    document.querySelectorAll('.get-directions-btn').forEach(btn => {
-        btn.addEventListener('click', function(e) {
-            const row = e.target.closest('tr');
-            if(row) {
-                const lat = row.dataset.latitude;
-                const lng = row.dataset.longitude;
-                // Add Google Maps logic here if needed
-                alert(`Getting directions for location: ${lat}, ${lng}`);
-            }
+    function submitNewIncident() {
+        const form = document.getElementById('addIncidentForm');
+        const data = Object.fromEntries(new FormData(form).entries());
+        
+        fetch('/api/incidents', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(data)
+        })
+        .then(res => res.json())
+        .then(() => {
+            alert('Incident Reported!');
+            location.reload();
+        })
+        .catch(err => alert('Error reporting incident'));
+    }
+
+    function searchIncidents() {
+        const term = document.getElementById('searchInput').value.toLowerCase();
+        const items = document.querySelectorAll('.incident-item');
+        items.forEach(item => {
+            const text = item.innerText.toLowerCase();
+            item.style.display = text.includes(term) ? '' : 'none';
         });
-    });
-    
-    // Assign Officer
-    document.querySelectorAll('.assign-officer-btn').forEach(btn => {
-        btn.addEventListener('click', function(e) {
-            const row = e.target.closest('tr');
-            if(row) {
-                // Call your existing showAssignOfficerModal logic
-                // Ensure that function exists in your main JS block
-                if(typeof showAssignOfficerModal === 'function') {
-                    showAssignOfficerModal(row.dataset.incidentId, row.dataset.source);
-                }
-            }
-        });
-    });
+    }
 
-    // View Details
-    document.querySelectorAll('.view-details-btn').forEach(btn => {
-        btn.addEventListener('click', function(e) {
-            const row = e.target.closest('tr');
-            if(row && typeof viewDetails === 'function') {
-                viewDetails(row.dataset.incidentId, row.dataset.source);
-            }
-        });
-    });
-}
+    // --- OFFICER LOGIC ---
+    function showAddOfficerModal() {
+        cleanupModals();
+        new bootstrap.Modal(document.getElementById('addOfficerModal')).show();
+    }
 
-// Include other necessary JS functions (viewDetails, showAssignOfficerModal, etc.) here
-// from your previous working code
+    function submitOfficer() {
+        const form = document.getElementById('officerForm');
+        const data = Object.fromEntries(new FormData(form).entries());
+        const btn = document.querySelector('#addOfficerModal .btn-success');
+
+        if(!data.full_name || !data.badge_number) return alert("Fill all fields");
+
+        btn.disabled = true;
+        btn.innerText = "Adding...";
+
+        fetch('/api/police-officers', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(data)
+        })
+        .then(res => res.json())
+        .then(result => {
+            if(result.error) alert(result.error);
+            else {
+                alert("Officer Added!");
+                location.reload();
+            }
+        })
+        .finally(() => {
+            btn.disabled = false;
+            btn.innerText = "Add Officer";
+        });
+    }
+
+    // --- MAP LOGIC ---
+    function initializeMap() {
+        if (document.getElementById('map')) {
+            map = L.map('map').setView([14.4644, 75.9218], 13);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors'
+            }).addTo(map);
+            
+            setTimeout(() => { map.invalidateSize(); }, 500);
+            loadIncidentsOnMap();
+        }
+    }
+
+    function loadIncidentsOnMap() {
+        if(!map) return;
+        fetch('/api/incidents')
+            .then(res => res.json())
+            .then(data => {
+                markers.forEach(m => map.removeLayer(m));
+                markers = [];
+                data.forEach(inc => {
+                    if (inc.latitude && inc.longitude) {
+                        const marker = L.marker([inc.latitude, inc.longitude])
+                            .addTo(map)
+                            .bindPopup(`<b>${inc.title}</b><br>${inc.address}`);
+                        markers.push(marker);
+                    }
+                });
+            });
+    }
+
+    function panToIncident(element) {
+        const lat = element.getAttribute('data-lat');
+        const lng = element.getAttribute('data-lng');
+        if (map && lat && lng) {
+            map.flyTo([lat, lng], 16);
+            document.getElementById('map').scrollIntoView({behavior: "smooth", block: "center"});
+        }
+    }
+
+    function refreshMap() { 
+        if(map) {
+            map.setView([14.4644, 75.9218], 13);
+            loadIncidentsOnMap();
+        }
+    }
 </script>
 {% endblock %}

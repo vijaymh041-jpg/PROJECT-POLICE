@@ -2,7 +2,7 @@
 
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h2>All Incidents - Davanagere Police</h2>
+    <h2 class="fw-bold">All Incidents - Davanagere Police</h2>
     <div>
         <button class="btn btn-outline-primary me-2" onclick="location.reload()">
             <i class="fas fa-sync-alt me-1"></i> Refresh
@@ -13,125 +13,86 @@
     </div>
 </div>
 
-<div class="row mb-4">
-    <div class="col-md-2 mb-3">
-        <div class="card card-police stats-card">
-            <i class="fas fa-list"></i>
-            <h3 id="totalIncidents">{{ total_incidents }}</h3>
-            <p>Total Incidents</p>
+<div class="row g-3 mb-4">
+    <div class="col-6 col-md-4 col-lg-2">
+        <div class="card stats-card h-100">
+            <div class="card-body text-center p-2">
+                <i class="fas fa-list fa-2x text-primary mb-2"></i>
+                <h3 class="fw-bold mb-0" id="totalIncidents">{{ total_incidents }}</h3>
+                <small class="text-muted fw-bold">Total</small>
+            </div>
         </div>
     </div>
-    <div class="col-md-2 mb-3">
-        <div class="card card-police stats-card">
-            <i class="fas fa-shield-alt"></i>
-            <h3 id="policeCount">{{ police_count }}</h3>
-            <p>Police Reports</p>
+    <div class="col-6 col-md-4 col-lg-2">
+        <div class="card stats-card h-100">
+            <div class="card-body text-center p-2">
+                <i class="fas fa-shield-alt fa-2x text-info mb-2"></i>
+                <h3 class="fw-bold mb-0" id="policeCount">{{ police_count }}</h3>
+                <small class="text-muted fw-bold">Police</small>
+            </div>
         </div>
     </div>
-    <div class="col-md-2 mb-3">
-        <div class="card card-police stats-card">
-            <i class="fas fa-users"></i>
-            <h3 id="publicCount">{{ public_count }}</h3>
-            <p>Public Reports</p>
+    <div class="col-6 col-md-4 col-lg-2">
+        <div class="card stats-card h-100">
+            <div class="card-body text-center p-2">
+                <i class="fas fa-users fa-2x text-secondary mb-2"></i>
+                <h3 class="fw-bold mb-0" id="publicCount">{{ public_count }}</h3>
+                <small class="text-muted fw-bold">Public</small>
+            </div>
         </div>
     </div>
-    <div class="col-md-2 mb-3">
-        <div class="card card-police stats-card">
-            <i class="fas fa-exclamation-triangle"></i>
-            <h3 id="highSeverityCount">{{ high_severity_count }}</h3>
-            <p>High Severity</p>
+    <div class="col-6 col-md-4 col-lg-2">
+        <div class="card stats-card h-100">
+            <div class="card-body text-center p-2">
+                <i class="fas fa-exclamation-triangle fa-2x text-warning mb-2"></i>
+                <h3 class="fw-bold mb-0">{{ high_severity_count }}</h3>
+                <small class="text-muted fw-bold">High Severity</small>
+            </div>
         </div>
     </div>
-    <div class="col-md-2 mb-3">
-        <div class="card card-police stats-card assigned-stats">
-            <i class="fas fa-user-check"></i>
-            <h3 id="assignedCount">{{ assigned_count }}</h3>
-            <p>Assigned</p>
+    <div class="col-6 col-md-4 col-lg-2">
+        <div class="card stats-card h-100">
+            <div class="card-body text-center p-2">
+                <i class="fas fa-user-check fa-2x text-success mb-2"></i>
+                <h3 class="fw-bold mb-0">{{ assigned_count }}</h3>
+                <small class="text-muted fw-bold">Assigned</small>
+            </div>
         </div>
     </div>
-    <div class="col-md-2 mb-3">
-        <div class="card card-police stats-card unassigned-stats">
-            <i class="fas fa-user-times"></i>
-            <h3 id="unassignedCount">{{ unassigned_count }}</h3>
-            <p>Unassigned</p>
-        </div>
-    </div>
-</div>
-
-<div class="row mb-3">
-    <div class="col-md-12">
-        <div class="card card-police">
-            <div class="card-body py-2">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <small class="text-muted">Filter by assignment:</small>
-                        <div class="btn-group btn-group-sm ms-2">
-                            <button type="button" class="btn btn-outline-primary active" onclick="filterByAssignment('all')">
-                                All Cases
-                            </button>
-                            <button type="button" class="btn btn-outline-success" onclick="filterByAssignment('assigned')">
-                                <i class="fas fa-user-check me-1"></i>Assigned
-                            </button>
-                            <button type="button" class="btn btn-outline-danger" onclick="filterByAssignment('unassigned')">
-                                <i class="fas fa-user-times me-1"></i>Unassigned
-                            </button>
-                        </div>
-                    </div>
-                    <div>
-                        <small class="text-muted">
-                            Showing <span id="visibleCount">{{ total_incidents }}</span> of {{ total_incidents }} incidents
-                        </small>
-                    </div>
-                </div>
+    <div class="col-6 col-md-4 col-lg-2">
+        <div class="card stats-card h-100">
+            <div class="card-body text-center p-2">
+                <i class="fas fa-user-times fa-2x text-danger mb-2"></i>
+                <h3 class="fw-bold mb-0">{{ unassigned_count }}</h3>
+                <small class="text-muted fw-bold">Unassigned</small>
             </div>
         </div>
     </div>
 </div>
 
-<div class="row mb-3">
-    <div class="col-md-12">
-        <div class="card card-police">
-            <div class="card-body py-2">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <small class="text-muted">Filter by source:</small>
-                        <div class="btn-group btn-group-sm ms-2">
-                            <button type="button" class="btn btn-outline-primary active" onclick="filterIncidents('all')">
-                                All Sources
-                            </button>
-                            <button type="button" class="btn btn-outline-primary" onclick="filterIncidents('police')">
-                                Police Reports
-                            </button>
-                            <button type="button" class="btn btn-outline-primary" onclick="filterIncidents('public')">
-                                Public Reports
-                            </button>
-                        </div>
-                    </div>
-                    <div>
-                        <small class="text-muted">
-                            <i class="fas fa-user-check text-success me-1"></i>Assigned
-                            <i class="fas fa-user-times text-danger ms-2 me-1"></i>Unassigned
-                        </small>
-                    </div>
+<div class="card card-police mb-4">
+    <div class="card-body py-2">
+        <div class="d-flex flex-wrap justify-content-between align-items-center">
+            <div class="mb-2 mb-md-0">
+                <small class="text-muted me-2">Filter:</small>
+                <div class="btn-group btn-group-sm">
+                    <button type="button" class="btn btn-outline-primary active" onclick="filterByAssignment('all')">All</button>
+                    <button type="button" class="btn btn-outline-success" onclick="filterByAssignment('assigned')">Assigned</button>
+                    <button type="button" class="btn btn-outline-danger" onclick="filterByAssignment('unassigned')">Unassigned</button>
                 </div>
+            </div>
+            <div class="input-group input-group-sm" style="max-width: 300px;">
+                <input type="text" class="form-control" placeholder="Search incidents..." id="searchInput" onkeyup="searchIncidents()">
+                <span class="input-group-text"><i class="fas fa-search"></i></span>
             </div>
         </div>
     </div>
 </div>
 
 <div class="card card-police">
-    <div class="card-header bg-white d-flex justify-content-between align-items-center">
-        <h5 class="mb-0">Incident Records from Database (Both Collections)</h5>
-        <div class="input-group" style="width: 300px;">
-            <input type="text" class="form-control" placeholder="Search incidents..." id="searchInput">
-            <button class="btn btn-outline-secondary" type="button" onclick="searchIncidents()">
-                <i class="fas fa-search"></i>
-            </button>
-        </div>
-    </div>
     <div class="card-body p-0">
         <div class="table-responsive">
-            <table class="table table-hover table-striped mb-0" id="incidentsTable">
+            <table class="table table-hover mb-0" id="incidentsTable">
                 <thead class="table-light">
                     <tr>
                         <th>Assignment</th>
@@ -142,115 +103,86 @@
                         <th>Status</th>
                         <th>Location</th>
                         <th>Assigned Officer</th>
-                        <th>Reported</th>
+                        <th>Date</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for incident in all_incidents %}
-                    <tr class="incident-row {% if not incident.is_assigned %}unassigned-incident{% else %}assigned-incident{% endif %}" 
-                        data-incident-id="{{ incident._id }}" 
-                        data-latitude="{{ incident.latitude }}" 
-                        data-longitude="{{ incident.longitude }}"
-                        data-title="{{ incident.title }}"
-                        data-address="{{ incident.address }}"
+                    <tr class="incident-row {% if not incident.is_assigned %}unassigned-incident{% else %}assigned-incident{% endif %}"
+                        data-incident-id="{{ incident._id }}"
                         data-source="{{ incident.source }}"
                         data-is-assigned="{{ incident.is_assigned }}">
-                        <td class="assignment-status">
+                        
+                        <td>
                             {% if incident.is_assigned %}
-                            <span class="badge bg-success assigned-badge">
-                                <i class="fas fa-user-check me-1"></i>Assigned
-                            </span>
+                                <span class="badge bg-success"><i class="fas fa-check me-1"></i>Assigned</span>
                             {% else %}
-                            <span class="badge bg-danger unassigned-badge">
-                                <i class="fas fa-user-times me-1"></i>Unassigned
-                            </span>
+                                <span class="badge bg-danger"><i class="fas fa-times me-1"></i>Unassigned</span>
                             {% endif %}
                         </td>
+
                         <td>
                             {% if incident.source == 'police' %}
-                            <span class="badge bg-primary">
-                                <i class="fas fa-shield-alt me-1"></i>Police
-                            </span>
+                                <span class="badge bg-primary">Police</span>
                             {% else %}
-                            <span class="badge bg-secondary">
-                                <i class="fas fa-user me-1"></i>Public
-                            </span>
+                                <span class="badge bg-secondary">Public</span>
                             {% endif %}
                         </td>
+
                         <td>
-                            <div class="fw-bold">{{ incident.title|default('No Title', true) }}</div>
-                            <small class="text-muted">
-                                {% if incident.description %}
-                                    {{ incident.description[:80] }}...
-                                {% else %}
-                                    No description available
-                                {% endif %}
-                            </small>
+                            <div class="fw-bold">{{ incident.title }}</div>
+                            <small class="text-muted">{{ incident.description[:40] }}...</small>
                         </td>
-                        <td>{{ incident.incident_type|default('Unknown', true) }}</td>
+
+                        <td>{{ incident.incident_type }}</td>
+
                         <td>
                             <span class="badge bg-{{ 'danger' if incident.severity == 'high' else 'warning' if incident.severity == 'medium' else 'success' }}">
-                                {{ incident.severity|default('medium', true)|title }}
+                                {{ incident.severity|title }}
                             </span>
                         </td>
+
                         <td>
-                            <span class="badge bg-{{ 'primary' if incident.status == 'active' else 'success' if incident.status == 'resolved' else 'secondary' }}">
-                                {{ incident.status|default('pending', true)|title }}
+                            <span class="badge bg-{{ 'primary' if incident.status == 'active' else 'success' }}">
+                                {{ incident.status|title }}
                             </span>
                         </td>
+
                         <td>
-                            <div class="d-flex align-items-center">
-                                <i class="fas fa-map-marker-alt text-danger me-2"></i>
-                                <span>{{ incident.address|default('Unknown location', true) }}</span>
+                            <div class="text-truncate" style="max-width: 150px;" title="{{ incident.address }}">
+                                <i class="fas fa-map-marker-alt text-danger me-1"></i>{{ incident.address }}
                             </div>
                         </td>
+
                         <td>
                             {% if incident.assigned_officer and incident.assigned_officer != 'Unassigned' %}
-                            <span class="badge bg-info" title="From {{ current_user.police_station }}">
-                                <i class="fas fa-user me-1"></i>{{ incident.assigned_officer }}
-                            </span>
+                                <span class="badge bg-info text-dark">{{ incident.assigned_officer }}</span>
                             {% else %}
-                            <span class="badge bg-secondary">
-                                <i class="fas fa-user-slash me-1"></i>Unassigned
-                            </span>
+                                <span class="text-muted small">--</span>
                             {% endif %}
                         </td>
+
                         <td>
-                            {% if incident.created_at %}
-                            <small>{{ incident.created_at.strftime('%Y-%m-%d %H:%M') }}</small>
-                            {% else %}
-                            <small class="text-muted">Unknown</small>
-                            {% endif %}
+                            <small>{{ incident.created_at.strftime('%Y-%m-%d') }}<br>{{ incident.created_at.strftime('%H:%M') }}</small>
                         </td>
+
                         <td>
-    <div class="btn-group btn-group-sm">
-        <button class="btn btn-outline-primary get-directions-btn" title="Get Directions">
-            <i class="fas fa-directions"></i>
-        </button>
-        {% if incident.source == 'police' and current_user.username == incident.reported_by %}
-        <button class="btn btn-outline-warning edit-incident-btn" title="Edit">
-            <i class="fas fa-edit"></i>
-        </button>
-        {% endif %}
-        <button class="btn btn-outline-success assign-officer-btn" title="Assign Officer">
-            <i class="fas fa-user-plus"></i>
-        </button>
-        <button class="btn btn-outline-info view-details-btn" title="Details">
-            <i class="fas fa-eye"></i>
-        </button>
-    </div>
-</td>
+                            <div class="btn-group btn-group-sm">
+                                <button class="btn btn-outline-success assign-officer-btn" title="Assign Officer">
+                                    <i class="fas fa-user-plus"></i>
+                                </button>
+                                <button class="btn btn-outline-info view-details-btn" title="Details">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                        </td>
                     </tr>
                     {% else %}
                     <tr>
-                        <td colspan="10" class="text-center text-muted py-5">
+                        <td colspan="10" class="text-center py-5 text-muted">
                             <i class="fas fa-inbox fa-3x mb-3"></i>
-                            <h5>No Incidents Found</h5>
-                            <p>No incidents have been reported in either collection.</p>
-                            <button class="btn btn-police mt-2" onclick="showAddIncidentModal()">
-                                <i class="fas fa-plus me-2"></i>Report First Incident
-                            </button>
+                            <p>No incidents found.</p>
                         </td>
                     </tr>
                     {% endfor %}
@@ -258,186 +190,85 @@
             </table>
         </div>
     </div>
-    <div class="card-footer bg-white">
-        <div class="d-flex justify-content-between align-items-center">
-            <small class="text-muted">
-                Showing <strong>{{ total_incidents }}</strong> incident(s) from both collections
-            </small>
-            <div>
-                <small class="text-muted me-3">
-                    <i class="fas fa-shield-alt text-primary me-1"></i>Police
-                    <i class="fas fa-user text-secondary ms-2 me-1"></i>Public
-                </small>
-            </div>
-        </div>
-    </div>
 </div>
 
-<div class="row mt-4">
-    <div class="col-md-4">
-        <div class="card card-police">
-            <div class="card-header bg-white">
-                <h6 class="mb-0"><i class="fas fa-bolt me-2"></i>Quick Actions</h6>
-            </div>
-            <div class="card-body">
-                <div class="d-grid gap-2">
-                    <a href="{{ url_for('export_csv') }}" class="btn btn-outline-primary btn-sm">
-                        <i class="fas fa-download me-2"></i>Export to CSV
-                    </a>
-                    <button class="btn btn-outline-success btn-sm" onclick="printReport()">
-                        <i class="fas fa-print me-2"></i>Print Report
-                    </button>
-                    <a href="{{ url_for('reports') }}" class="btn btn-outline-info btn-sm">
-                        <i class="fas fa-chart-bar me-2"></i>Generate Analytics
-                    </a>
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <div class="col-md-8">
-        <div class="card card-police">
-            <div class="card-header bg-white">
-                <h6 class="mb-0"><i class="fas fa-chart-pie me-2"></i>Incident Distribution</h6>
-            </div>
-            <div class="card-body">
-                <div class="row text-center">
-                    <div class="col-md-3">
-                        <div class="border rounded p-3">
-                            <div class="text-primary fw-bold fs-4">{{ police_count }}</div>
-                            <small>Police Reports</small>
-                        </div>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="border rounded p-3">
-                            <div class="text-secondary fw-bold fs-4">{{ public_count }}</div>
-                            <small>Public Reports</small>
-                        </div>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="border rounded p-3">
-                            <div class="text-success fw-bold fs-4">{{ assigned_count }}</div>
-                            <small>Assigned</small>
-                        </div>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="border rounded p-3">
-                            <div class="text-danger fw-bold fs-4">{{ unassigned_count }}</div>
-                            <small>Unassigned</small>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<div class="modal fade" id="addIncidentModal" tabindex="-1">
+<div class="modal fade" id="addIncidentModal" tabindex="-1" data-bs-backdrop="static">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Report New Police Incident</h5>
+                <h5 class="modal-title">Report New Incident</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <form id="incidentForm">
+                <form id="addIncidentForm">
                     <div class="row">
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label class="form-label">Title *</label>
-                                <input type="text" class="form-control" name="title" required>
-                            </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Title *</label>
+                            <input type="text" class="form-control" name="title" required>
                         </div>
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label class="form-label">Type *</label>
-                                <select class="form-select" name="incident_type" required>
-                                    <option value="">Select type...</option>
-                                    <option value="Traffic Accident">Traffic Accident</option>
-                                    <option value="Public Disturbance">Public Disturbance</option>
-                                    <option value="Burglary">Burglary</option>
-                                    <option value="Medical Emergency">Medical Emergency</option>
-                                    <option value="Fire">Fire</option>
-                                    <option value="Other">Other</option>
-                                </select>
-                            </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Type</label>
+                            <select class="form-select" name="incident_type">
+                                <option>Theft</option>
+                                <option>Accident</option>
+                                <option>Public Disturbance</option>
+                                <option>Traffic Violation</option>
+                                <option>Other</option>
+                            </select>
                         </div>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Description *</label>
-                        <textarea class="form-control" name="description" rows="3" required></textarea>
+                        <label class="form-label">Description</label>
+                        <textarea class="form-control" name="description" rows="3"></textarea>
                     </div>
-                    
-                    <div class="mb-3">
-                        <label class="form-label">Select Location on Map *</label>
-                        <div id="locationMap" style="height: 300px; width: 100%; border: 1px solid #ccc; border-radius: 5px;"></div>
-                        <small class="text-muted">Click on the map to drop a pin at the incident location</small>
-                    </div>
-
-                    <input type="hidden" id="selectedLatitude" name="latitude">
-                    <input type="hidden" id="selectedLongitude" name="longitude">
-
-                    <div class="mb-3">
-                        <label class="form-label">Selected Address</label>
-                        <input type="text" class="form-control" id="selectedAddress" name="address" readonly>
-                        <small class="text-muted">Address will be automatically detected from the map pin location</small>
-                    </div>
-
                     <div class="row">
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label class="form-label">Latitude</label>
-                                <input type="text" class="form-control" id="displayLatitude" readonly>
-                            </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Severity</label>
+                            <select class="form-select" name="severity">
+                                <option value="low">Low</option>
+                                <option value="medium" selected>Medium</option>
+                                <option value="high">High</option>
+                            </select>
                         </div>
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label class="form-label">Longitude</label>
-                                <input type="text" class="form-control" id="displayLongitude" readonly>
-                            </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Latitude</label>
+                            <input type="number" step="any" class="form-control" name="latitude" value="14.4644">
                         </div>
-                    </div>
-                    
-                    <div class="row">
-                        <div class="col-md-4">
-                            <div class="mb-3">
-                                <label class="form-label">Severity *</label>
-                                <select class="form-select" name="severity" required>
-                                    <option value="low">Low</option>
-                                    <option value="medium" selected>Medium</option>
-                                    <option value="high">High</option>
-                                </select>
-                            </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Longitude</label>
+                            <input type="number" step="any" class="form-control" name="longitude" value="75.9218">
                         </div>
-                        <div class="col-md-4">
-                            <div class="mb-3">
-                                <label class="form-label">Status *</label>
-                                <select class="form-select" name="status" required>
-                                    <option value="active" selected>Active</option>
-                                    <option value="pending">Pending</option>
-                                    <option value="resolved">Resolved</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="mb-3">
-                                <label class="form-label">Assigned Officer</label>
-                                <select class="form-select" name="assigned_officer" id="assignedOfficer">
-                                    <option value="">Unassigned</option>
-                                    <option value="{{ current_user.username }}">{{ current_user.username }}</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Reported By</label>
-                        <input type="text" class="form-control" name="reported_by" value="{{ current_user.username }}" readonly>
                     </div>
                 </form>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-police" onclick="submitIncident()">Save Incident</button>
+                <button type="button" class="btn btn-primary" onclick="submitNewIncident()">Submit Report</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="assignOfficerModal" tabindex="-1" data-bs-backdrop="static">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Assign Officer</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="assignIncidentId">
+                <input type="hidden" id="assignIncidentSource">
+                <div class="mb-3">
+                    <label class="form-label">Select Officer</label>
+                    <select class="form-select" id="officerSelect">
+                        <option value="">Loading...</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="submitAssignment()">Assign</button>
             </div>
         </div>
     </div>
@@ -452,1278 +283,148 @@
             </div>
             <div class="modal-body" id="detailsContent">
                 </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-            </div>
         </div>
     </div>
 </div>
 
-<div class="modal fade" id="editIncidentModal" tabindex="-1">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Edit Police Incident</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body" id="editIncidentContent">
-                </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-police" onclick="updateIncident()">Update Incident</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<div class="modal fade" id="assignOfficerModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Assign Officer to Incident</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <form id="assignOfficerForm">
-                    <input type="hidden" id="assignIncidentId" name="incident_id">
-                    <input type="hidden" id="assignIncidentSource" name="source">
-                    <div class="mb-3">
-                        <label class="form-label">Select Officer from {{ current_user.police_station }}</label>
-                        <select class="form-select" id="officerSelect" name="assigned_officer" required>
-                            <option value="">Select an officer...</option>
-                        </select>
-                        <small class="text-muted">Only officers from your police station are shown</small>
-                    </div>
-                    <div class="alert alert-info">
-                        <small>
-                            <i class="fas fa-info-circle me-2"></i>
-                            This will assign the selected officer from {{ current_user.police_station }} to handle this incident and add it to ASSIGNED_CASES collection.
-                        </small>
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-police" onclick="assignOfficer()">Assign Officer</button>
-            </div>
-        </div>
-    </div>
-</div>
 {% endblock %}
 
 {% block scripts %}
-<script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
 <script>
-// Store template data in JavaScript variables using data attributes
-let currentEditIncidentId = null;
-let locationMap = null;
-let locationMarker = null;
-let currentAssignIncidentId = null;
-let currentAssignIncidentSource = null;
-
-// Debug information
-document.addEventListener('DOMContentLoaded', function() {
-    const totalIncidents = document.getElementById('totalIncidents').textContent;
-    const policeCount = document.getElementById('policeCount').textContent;
-    const publicCount = document.getElementById('publicCount').textContent;
-    const assignedCount = document.getElementById('assignedCount').textContent;
-    const unassignedCount = document.getElementById('unassignedCount').textContent;
-    
-    console.log('🔍 Incidents Page Debug Info:');
-    console.log('Total incidents from template:', totalIncidents);
-    console.log('Police incidents count:', policeCount);
-    console.log('Public incidents count:', publicCount);
-    console.log('Assigned incidents count:', assignedCount);
-    console.log('Unassigned incidents count:', unassignedCount);
-    console.log('Current police station:', '{{ current_user.police_station }}');
-    console.log('Incidents page loaded with ' + totalIncidents + ' incidents from both collections');
-    
-    loadPoliceOfficers();
-    
-    // Get Directions button click
-    document.addEventListener('click', function(e) {
-        if (e.target.closest('.get-directions-btn')) {
-            const row = e.target.closest('tr');
-            const lat = parseFloat(row.dataset.latitude);
-            const lng = parseFloat(row.dataset.longitude);
-            const title = row.dataset.title;
-            const address = row.dataset.address;
-            getDirections(lat, lng, title, address);
-        }
-    });
-    
-    // Edit Incident button click
-    document.addEventListener('click', function(e) {
-        if (e.target.closest('.edit-incident-btn')) {
-            const row = e.target.closest('tr');
-            const incidentId = row.dataset.incidentId;
-            const source = row.dataset.source;
-            editIncident(incidentId, source);
-        }
-    });
-    
-    // Assign Officer button click
-    document.addEventListener('click', function(e) {
-        if (e.target.closest('.assign-officer-btn')) {
-            const row = e.target.closest('tr');
-            const incidentId = row.dataset.incidentId;
-            const source = row.dataset.source;
-            showAssignOfficerModal(incidentId, source);
-        }
-    });
-    
-    // View Details button click
-    document.addEventListener('click', function(e) {
-        if (e.target.closest('.view-details-btn')) {
-            const row = e.target.closest('tr');
-            const incidentId = row.dataset.incidentId;
-            const source = row.dataset.source;
-            viewDetails(incidentId, source);
-        }
-    });
-});
-
-// New filter function for assignment status - FIXED to use non-destructive client-side filtering
-// New filter function for assignment status - FIXED to use robust client-side filtering
-function filterByAssignment(status) {
-    console.log('🔍 Filter by assignment:', status);
-
-    const tbody = document.querySelector('#incidentsTable tbody');
-    // FIX: Get ONLY the incident data rows (those with the specific class). This prevents interference from other <tr> elements.
-    const allIncidentRows = tbody.querySelectorAll('tr.incident-row'); 
-    let visibleCount = 0;
-
-    // Update active button state
-    document.querySelectorAll('.btn-group .btn').forEach(btn => {
-        btn.classList.remove('active');
-    });
-    if (event && event.target) {
-        event.target.classList.add('active');
+    // --- UTILS: Fix Stuck Modal ---
+    function cleanupModals() {
+        document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+        document.body.classList.remove('modal-open');
+        document.body.style = '';
     }
 
-    // Hide any existing messages first
-    const NO_MATCH_ROW_ID = 'no-filter-match-row';
-    const existingNoMatchRow = document.getElementById(NO_MATCH_ROW_ID);
-    if (existingNoMatchRow) {
-        existingNoMatchRow.style.display = 'none';
-    }
+    // --- SETUP LISTENERS ---
+    document.addEventListener('DOMContentLoaded', function() {
+        cleanupModals(); // Safety run
 
-    // --- Core Filtering Loop ---
-    allIncidentRows.forEach(row => {
-        // **CRITICAL FIX:** Make the comparison case-insensitive to handle both "True" (from Jinja) and "true".
-        const isAssigned = row.dataset.isAssigned.toLowerCase() === 'true'; 
-        let shouldShow = false;
-
-        if (status === 'all') {
-            shouldShow = true;
-        } else if (status === 'assigned') {
-            shouldShow = isAssigned; // Now correctly true for assigned cases
-        } else if (status === 'unassigned') {
-            shouldShow = !isAssigned; // Now correctly true for unassigned cases
-        }
-
-        if (shouldShow) {
-            row.style.display = ''; 
-            visibleCount++;
-        } else {
-            row.style.display = 'none';
-        }
-    });
-
-    // --- Handle "No Match" Message ---
-    if (visibleCount === 0 && allIncidentRows.length > 0) {
-        // Case: Records exist but none match the current filter.
-        let noMatchRow = document.getElementById(NO_MATCH_ROW_ID);
-        if (!noMatchRow) {
-            noMatchRow = document.createElement('tr');
-            noMatchRow.id = NO_MATCH_ROW_ID;
-            // colspan is 10 as per previous fix
-            noMatchRow.innerHTML = `
-                <td colspan="10" class="text-center text-muted py-5">
-                    <i class="fas fa-search-minus fa-3x mb-3"></i>
-                    <h5>No Incidents Match Filter</h5>
-                    <p>No records found for the selected assignment status in the current database view.</p>
-                </td>
-            `;
-            tbody.appendChild(noMatchRow);
-        }
-        noMatchRow.style.display = ''; // Ensure it is visible
-    }
-    
-    document.getElementById('visibleCount').textContent = visibleCount;
-}
-
-// Function to re-attach event listeners to buttons
-function attachEventListeners() {
-    // Get Directions button click
-    document.querySelectorAll('.get-directions-btn').forEach(btn => {
-        btn.addEventListener('click', function(e) {
-            const row = e.target.closest('tr');
-            const lat = parseFloat(row.dataset.latitude);
-            const lng = parseFloat(row.dataset.longitude);
-            const title = row.dataset.title;
-            const address = row.dataset.address;
-            getDirections(lat, lng, title, address);
-        });
-    });
-    
-    // Edit Incident button click
-    document.querySelectorAll('.edit-incident-btn').forEach(btn => {
-        btn.addEventListener('click', function(e) {
-            const row = e.target.closest('tr');
-            const incidentId = row.dataset.incidentId;
-            const source = row.dataset.source;
-            editIncident(incidentId, source);
-        });
-    });
-    
-    // Assign Officer button click
-    document.querySelectorAll('.assign-officer-btn').forEach(btn => {
-        btn.addEventListener('click', function(e) {
-            const row = e.target.closest('tr');
-            const incidentId = row.dataset.incidentId;
-            const source = row.dataset.source;
-            showAssignOfficerModal(incidentId, source);
-        });
-    });
-    
-    // View Details button click
-    document.querySelectorAll('.view-details-btn').forEach(btn => {
-        btn.addEventListener('click', function(e) {
-            const row = e.target.closest('tr');
-            const incidentId = row.dataset.incidentId;
-            const source = row.dataset.source;
-            viewDetails(incidentId, source);
-        });
-    });
-}
-
-// Call attachEventListeners on initial page load
-document.addEventListener('DOMContentLoaded', function() {
-    attachEventListeners();
-});
-
-function filterIncidents(source) {
-    const rows = document.querySelectorAll('#incidentsTable tbody tr.incident-row');
-    let visibleCount = 0;
-    
-    // Update active button state
-    document.querySelectorAll('.btn-group .btn').forEach(btn => {
-        btn.classList.remove('active');
-    });
-    event.target.classList.add('active');
-    
-    rows.forEach(row => {
-        const rowSource = row.dataset.source;
+        const tbody = document.querySelector('tbody');
         
-        if (source === 'all' || rowSource === source) {
-            row.style.display = '';
-            visibleCount++;
-        } else {
-            row.style.display = 'none';
-        }
-    });
-    
-    document.getElementById('visibleCount').textContent = visibleCount;
-}
-
-function initializeLocationMap() {
-    // Initialize map centered on Davanagere
-    locationMap = L.map('locationMap').setView([14.4664, 75.9238], 13);
-    
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '© OpenStreetMap contributors'
-    }).addTo(locationMap);
-    
-    // Add click event to map
-    locationMap.on('click', function(e) {
-        const lat = e.latlng.lat;
-        const lng = e.latlng.lng;
-        
-        // Update hidden fields
-        document.getElementById('selectedLatitude').value = lat;
-        document.getElementById('selectedLongitude').value = lng;
-        
-        // Update display fields
-        document.getElementById('displayLatitude').value = lat.toFixed(6);
-        document.getElementById('displayLongitude').value = lng.toFixed(6);
-        
-        // Remove existing marker
-        if (locationMarker) {
-            locationMap.removeLayer(locationMarker);
-        }
-        
-        // Add new marker
-        locationMarker = L.marker([lat, lng]).addTo(locationMap)
-            .bindPopup('Incident Location')
-            .openPopup();
-        
-        // Get address from coordinates
-        getAddressFromCoordinates(lat, lng);
-    });
-}
-
-async function getAddressFromCoordinates(lat, lng) {
-    try {
-        document.getElementById('selectedAddress').value = 'Getting address...';
-        
-        const response = await fetch('/api/reverse-geocode?lat=' + lat + '&lng=' + lng);
-        const data = await response.json();
-        
-        if (response.ok && data.address) {
-            document.getElementById('selectedAddress').value = data.address;
-        } else {
-            document.getElementById('selectedAddress').value = 'Location at ' + lat.toFixed(6) + ', ' + lng.toFixed(6);
-        }
-    } catch (error) {
-        console.error('Error getting address:', error);
-        document.getElementById('selectedAddress').value = 'Location at ' + lat.toFixed(6) + ', ' + lng.toFixed(6);
-    }
-}
-
-// Initialize map when modal is shown
-document.getElementById('addIncidentModal').addEventListener('shown.bs.modal', function () {
-    setTimeout(function() {
-        if (!locationMap) {
-            initializeLocationMap();
-        } else {
-            locationMap.invalidateSize();
-        }
-    }, 100);
-});
-
-function getDirections(lat, lng, title, address) {
-    // Create Google Maps URL with directions
-    const googleMapsUrl = 'https://www.google.com/maps/dir/?api=1&destination=' + lat + ',' + lng + '&travelmode=driving&destination_place_id=' + encodeURIComponent(address);
-    
-    // Open Google Maps in a new tab
-    window.open(googleMapsUrl, '_blank');
-    
-    // Optional: Show confirmation message
-    alert('Opening Google Maps with directions to:\n' + title + '\n' + address);
-}
-
-async function viewDetails(incidentId, source) {
-    console.log('🔍 View Details called:', { incidentId, source });
-    
-    try {
-        // First, validate the incident ID
-        if (!incidentId) {
-            alert('Error: Incident ID is missing');
-            return;
-        }
-        
-        // Make sure we're using the correct API endpoint
-        const response = await fetch(`/api/incidents/${incidentId}/details?source=${source}`);
-        
-        if (!response.ok) {
-            const errorText = await response.text();
-            console.error('API Error Response:', errorText);
-            throw new Error(`API returned ${response.status}: ${errorText}`);
-        }
-        
-        const incident = await response.json();
-        console.log('Incident data received:', incident);
-        
-        if (response.ok && incident) {
-            const detailsContent = document.getElementById('detailsContent');
-            
-            // Create safe variables with proper escaping
-            const incidentIdSafe = escapeHtml(incident.incident_id || 'N/A');
-            const titleSafe = escapeHtml(incident.title || 'No Title');
-            const typeSafe = escapeHtml(incident.incident_type || 'Unknown');
-            const severitySafe = incident.severity || 'medium';
-            const statusSafe = incident.status || 'pending';
-            const sourceSafe = incident.source || 'unknown';
-            const addressSafe = escapeHtml(incident.address || 'Unknown location');
-            const latitudeSafe = incident.latitude || 0;
-            const longitudeSafe = incident.longitude || 0;
-            const assignedOfficerSafe = escapeHtml(incident.assigned_officer || 'Unassigned');
-            const reportedBySafe = escapeHtml(incident.reported_by || 'Unknown');
-            const descriptionSafe = escapeHtml(incident.description || 'No description available');
-            const createdAtSafe = incident.created_at ? new Date(incident.created_at).toLocaleString() : 'Unknown';
-            const updatedAtSafe = incident.updated_at ? new Date(incident.updated_at).toLocaleString() : 'Unknown';
-            const isAssignedSafe = incident.is_assigned || false;
-            
-            // Determine badge colors
-            const severityColor = severitySafe === 'high' ? 'danger' : severitySafe === 'medium' ? 'warning' : 'success';
-            const statusColor = statusSafe === 'active' ? 'primary' : statusSafe === 'resolved' ? 'success' : 'secondary';
-            const sourceColor = sourceSafe === 'police' ? 'primary' : 'secondary';
-            const assignmentColor = isAssignedSafe ? 'success' : 'danger';
-            const assignmentText = isAssignedSafe ? 'Assigned' : 'Unassigned';
-            const assignmentIcon = isAssignedSafe ? 'fa-user-check' : 'fa-user-times';
-            
-            detailsContent.innerHTML = `
-                <div class="row">
-                    <div class="col-md-6">
-                        <h6>Basic Information</h6>
-                        <p><strong>Incident ID:</strong> ${incidentIdSafe}</p>
-                        <p><strong>Title:</strong> ${titleSafe}</p>
-                        <p><strong>Type:</strong> ${typeSafe}</p>
-                        <p><strong>Severity:</strong> <span class="badge bg-${severityColor}">${severitySafe}</span></p>
-                        <p><strong>Status:</strong> <span class="badge bg-${statusColor}">${statusSafe}</span></p>
-                        <p><strong>Source:</strong> <span class="badge bg-${sourceColor}">${sourceSafe}</span></p>
-                        <p><strong>Assignment:</strong> <span class="badge bg-${assignmentColor}"><i class="fas ${assignmentIcon} me-1"></i>${assignmentText}</span></p>
-                    </div>
-                    <div class="col-md-6">
-                        <h6>Location & Assignment</h6>
-                        <p><strong>Address:</strong> ${addressSafe}</p>
-                        <p><strong>Coordinates:</strong> ${latitudeSafe}, ${longitudeSafe}</p>
-                        <p><strong>Assigned Officer:</strong> ${assignedOfficerSafe}</p>
-                        <p><strong>Reported By:</strong> ${reportedBySafe}</p>
-                        <div class="mt-2">
-                            <button class="btn btn-sm btn-outline-primary" onclick="getDirections(${latitudeSafe}, ${longitudeSafe}, '${titleSafe.replace(/'/g, "\\'")}', '${addressSafe.replace(/'/g, "\\'")}')">
-                                <i class="fas fa-directions me-1"></i>Get Directions
-                            </button>
-                        </div>
-                    </div>
-                </div>
-                <div class="row mt-3">
-                    <div class="col-12">
-                        <h6>Description</h6>
-                        <div class="border rounded p-3 bg-light">
-                            ${descriptionSafe}
-                        </div>
-                    </div>
-                </div>
-                <div class="row mt-3">
-                    <div class="col-md-6">
-                        <p><strong>Created:</strong> ${createdAtSafe}</p>
-                    </div>
-                    <div class="col-md-6">
-                        <p><strong>Last Updated:</strong> ${updatedAtSafe}</p>
-                    </div>
-                </div>
-            `;
-            
-            const modal = new bootstrap.Modal(document.getElementById('detailsModal'));
-            modal.show();
-        } else {
-            alert('Error loading incident details: ' + (incident.error || 'Unknown error'));
-        }
-    } catch (error) {
-        console.error('Error loading details:', error);
-        alert('Error loading incident details: ' + error.message);
-    }
-}
-
-// Add this helper function for HTML escaping
-function escapeHtml(text) {
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
-}
-
-async function editIncident(incidentId, source) {
-    console.log('🔍 Edit Incident called:', { incidentId, source });
-    
-    try {
-        if (source !== 'police') {
-            alert('Only police incidents can be edited. Public incidents are read-only.');
-            return;
-        }
-        
-        const response = await fetch(`/api/incidents/${incidentId}/details?source=${source}`);
-        const incident = await response.json();
-        
-        console.log('Edit incident data:', incident);
-        
-        if (response.ok && incident.source === 'police') {
-            // Check if current user can edit this incident
-            if (incident.reported_by !== '{{ current_user.username }}') {
-                alert('You can only edit incidents that you reported.');
-                return;
+        // Use Event Delegation for better performance
+        tbody.addEventListener('click', function(e) {
+            // Assign Button
+            const assignBtn = e.target.closest('.assign-officer-btn');
+            if(assignBtn) {
+                const row = assignBtn.closest('tr');
+                openAssignModal(row.dataset.incidentId, row.dataset.source);
             }
-            
-            currentEditIncidentId = incidentId;
-            const editContent = document.getElementById('editIncidentContent');
-            
-            // Create safe variables with escaping
-            const titleSafe = escapeHtml(incident.title || '');
-            const descriptionSafe = escapeHtml(incident.description || '');
-            const incidentTypeSafe = escapeHtml(incident.incident_type || '');
-            const severitySafe = incident.severity || '';
-            const statusSafe = incident.status || '';
-            const assignedOfficerSafe = escapeHtml(incident.assigned_officer || '');
-            const latitudeSafe = incident.latitude || 0;
-            const longitudeSafe = incident.longitude || 0;
-            const addressSafe = escapeHtml(incident.address || '');
-            
-            editContent.innerHTML = `
-                <form id="editIncidentForm">
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label class="form-label">Title *</label>
-                                <input type="text" class="form-control" name="title" value="${titleSafe}" required>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label class="form-label">Type *</label>
-                                <select class="form-select" name="incident_type" required>
-                                    <option value="Traffic Accident" ${incidentTypeSafe === 'Traffic Accident' ? 'selected' : ''}>Traffic Accident</option>
-                                    <option value="Public Disturbance" ${incidentTypeSafe === 'Public Disturbance' ? 'selected' : ''}>Public Disturbance</option>
-                                    <option value="Burglary" ${incidentTypeSafe === 'Burglary' ? 'selected' : ''}>Burglary</option>
-                                    <option value="Medical Emergency" ${incidentTypeSafe === 'Medical Emergency' ? 'selected' : ''}>Medical Emergency</option>
-                                    <option value="Fire" ${incidentTypeSafe === 'Fire' ? 'selected' : ''}>Fire</option>
-                                    <option value="Other" ${incidentTypeSafe === 'Other' ? 'selected' : ''}>Other</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Description *</label>
-                        <textarea class="form-control" name="description" rows="3" required>${descriptionSafe}</textarea>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-4">
-                            <div class="mb-3">
-                                <label class="form-label">Severity *</label>
-                                <select class="form-select" name="severity" required>
-                                    <option value="low" ${severitySafe === 'low' ? 'selected' : ''}>Low</option>
-                                    <option value="medium" ${severitySafe === 'medium' ? 'selected' : ''}>Medium</option>
-                                    <option value="high" ${severitySafe === 'high' ? 'selected' : ''}>High</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="mb-3">
-                                <label class="form-label">Status *</label>
-                                <select class="form-select" name="status" required>
-                                    <option value="active" ${statusSafe === 'active' ? 'selected' : ''}>Active</option>
-                                    <option value="pending" ${statusSafe === 'pending' ? 'selected' : ''}>Pending</option>
-                                    <option value="resolved" ${statusSafe === 'resolved' ? 'selected' : ''}>Resolved</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="mb-3">
-                                <label class="form-label">Assigned Officer</label>
-                                <select class="form-select" name="assigned_officer" id="editAssignedOfficer">
-                                    <option value="">Unassigned</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label class="form-label">Latitude *</label>
-                                <input type="number" step="any" class="form-control" name="latitude" value="${latitudeSafe}" required>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label class="form-label">Longitude *</label>
-                                <input type="number" step="any" class="form-control" name="longitude" value="${longitudeSafe}" required>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Address *</label>
-                        <input type="text" class="form-control" name="address" value="${addressSafe}" required>
-                    </div>
-                </form>
-            `;
-            
-            // Load officers for the edit modal
-            await loadPoliceOfficersForEdit(assignedOfficerSafe);
-            
-            const modal = new bootstrap.Modal(document.getElementById('editIncidentModal'));
-            modal.show();
-        } else {
-            alert('Error loading incident for editing. ' + (incident.error || 'Incident is from public source or not found'));
-        }
-    } catch (error) {
-        console.error('Error in editIncident:', error);
-        alert('Error loading incident for editing: ' + error.message);
-    }
-}
 
-async function showAssignOfficerModal(incidentId, source) {
-    currentAssignIncidentId = incidentId;
-    currentAssignIncidentSource = source;
-    
-    try {
-        // Load police officers for assignment
-        await loadPoliceOfficersForAssignment();
-        
-        const modal = new bootstrap.Modal(document.getElementById('assignOfficerModal'));
-        modal.show();
-    } catch (error) {
-        console.error('Error showing assign officer modal:', error);
-        alert('Error loading officers for assignment');
-    }
-}
-
-async function loadPoliceOfficers() {
-    try {
-        const response = await fetch('/api/police-officers');
-        const officers = await response.json();
-        
-        if (response.ok) {
-            const assignedOfficerSelect = document.getElementById('assignedOfficer');
-            
-            // Clear existing options (except first two)
-            if (assignedOfficerSelect) {
-                // Keep only first two options: "Unassigned" and current user
-                const unassignedOption = assignedOfficerSelect.options[0];
-                const currentUserOption = assignedOfficerSelect.options[1];
-                assignedOfficerSelect.innerHTML = '';
-                
-                // Add back "Unassigned" option
-                if (unassignedOption) {
-                    assignedOfficerSelect.appendChild(unassignedOption.cloneNode(true));
-                }
-                
-                // Add back current user option
-                if (currentUserOption) {
-                    assignedOfficerSelect.appendChild(currentUserOption.cloneNode(true));
-                }
-                
-                // Add officers to the select (excluding current user if already in the list)
-                officers.forEach(officer => {
-                    // Skip if this officer is the current user (already added)
-                    if (officer.username !== '{{ current_user.username }}') {
-                        const option = document.createElement('option');
-                        option.value = officer.username;
-                        // Show only name and designation, not police station
-                        option.textContent = officer.full_name + ' (' + officer.badge_number + ') - ' + officer.designation;
-                        option.title = officer.full_name + ' - ' + officer.designation;
-                        assignedOfficerSelect.appendChild(option);
-                    }
-                });
-            }
-            
-            console.log('Loaded ' + officers.length + ' officers from station: {{ current_user.police_station }}');
-        } else {
-            console.error('Error loading police officers');
-        }
-    } catch (error) {
-        console.error('Error loading police officers:', error);
-    }
-}
-
-async function loadPoliceOfficersForEdit(currentOfficer) {
-    try {
-        const response = await fetch('/api/police-officers');
-        const officers = await response.json();
-        
-        if (response.ok) {
-            const editAssignedOfficerSelect = document.getElementById('editAssignedOfficer');
-            
-            // Clear existing options
-            if (editAssignedOfficerSelect) {
-                editAssignedOfficerSelect.innerHTML = '<option value="">Unassigned</option>';
-                
-                // Add current user as first option after unassigned
-                const currentUserOption = document.createElement('option');
-                currentUserOption.value = '{{ current_user.username }}';
-                currentUserOption.textContent = '{{ current_user.full_name }} (You)';
-                editAssignedOfficerSelect.appendChild(currentUserOption);
-                
-                // Add other officers to the select
-                officers.forEach(officer => {
-                    // Skip if this officer is the current user
-                    if (officer.username !== '{{ current_user.username }}') {
-                        const option = document.createElement('option');
-                        option.value = officer.username;
-                        // Show only name and designation
-                        option.textContent = officer.full_name + ' (' + officer.badge_number + ') - ' + officer.designation;
-                        if (officer.username === currentOfficer) {
-                            option.selected = true;
-                        }
-                        editAssignedOfficerSelect.appendChild(option);
-                    }
-                });
-            }
-        } else {
-            console.error('Error loading police officers for edit');
-        }
-    } catch (error) {
-        console.error('Error loading police officers for edit:', error);
-    }
-}
-
-async function loadPoliceOfficersForAssignment() {
-    try {
-        const response = await fetch('/api/police-officers');
-        const officers = await response.json();
-        
-        if (response.ok) {
-            const officerSelect = document.getElementById('officerSelect');
-            
-            // Clear existing options
-            if (officerSelect) {
-                officerSelect.innerHTML = '<option value="">Select an officer...</option>';
-                
-                // Add officers to the select (excluding current user if present)
-                officers.forEach(officer => {
-                    // Skip if this officer is the current user (they shouldn't assign to themselves)
-                    if (officer.username !== '{{ current_user.username }}') {
-                        const option = document.createElement('option');
-                        option.value = officer.username;
-                        // Show only name and designation, not police station
-                        option.textContent = officer.full_name + ' (' + officer.badge_number + ') - ' + officer.designation;
-                        officerSelect.appendChild(option);
-                    }
-                });
-                
-                console.log('Loaded ' + officers.length + ' officers for assignment from station: {{ current_user.police_station }}');
-                
-                if (officers.length === 0 || (officers.length === 1 && officers[0].username === '{{ current_user.username }}')) {
-                    officerSelect.innerHTML = '<option value="">No other officers available in your station</option>';
-                }
-            }
-        } else {
-            console.error('Error loading police officers for assignment');
-        }
-    } catch (error) {
-        console.error('Error loading police officers for assignment:', error);
-    }
-}
-
-// Function to update UI after assignment
-function updateIncidentAssignmentUI(incidentId, officerName) {
-    console.log('🔄 Updating UI for incident:', incidentId, 'Officer:', officerName);
-    
-    const row = document.querySelector(`tr[data-incident-id="${incidentId}"]`);
-    if (row) {
-        // Update assignment status
-        row.classList.remove('unassigned-incident');
-        row.classList.add('assigned-incident');
-        row.dataset.isAssigned = 'true';
-        
-        // Update assignment badge
-        const assignmentCell = row.querySelector('.assignment-status');
-        if (assignmentCell) {
-            assignmentCell.innerHTML = '<span class="badge bg-success assigned-badge"><i class="fas fa-user-check me-1"></i>Assigned</span>';
-        }
-        
-        // Update assigned officer column (8th td now that ID column is removed)
-        const officerCell = row.querySelector('td:nth-child(8)'); 
-        if (officerCell) {
-            officerCell.innerHTML = `<span class="badge bg-info" title="From {{ current_user.police_station }}"><i class="fas fa-user me-1"></i>${officerName}</span>`;
-        } else {
-            // Try alternative selector (8th element is at index 7)
-            const allCells = row.querySelectorAll('td');
-            if (allCells.length >= 8) {
-                allCells[7].innerHTML = `<span class="badge bg-info" title="From {{ current_user.police_station }}"><i class="fas fa-user me-1"></i>${officerName}</span>`;
-            }
-        }
-        
-        console.log('✅ UI updated successfully');
-        
-        // Update statistics
-        updateAssignmentStats();
-    } else {
-        console.log('⚠️ Row not found for incident:', incidentId);
-        
-        // If row not found (maybe filtered out), update stats anyway
-        updateAssignmentStats();
-    }
-}
-
-// Enhanced assignment function with better UI feedback
-async function assignOfficer() {
-    if (!currentAssignIncidentId) {
-        alert('No incident selected');
-        return;
-    }
-    
-    const officerSelect = document.getElementById('officerSelect');
-    const selectedOfficer = officerSelect.value;
-    
-    if (!selectedOfficer || selectedOfficer === "") {
-        alert('Please select an officer');
-        return;
-    }
-    
-    // Show loading state
-    const assignBtn = document.querySelector('#assignOfficerModal .btn-police');
-    const originalText = assignBtn.innerHTML;
-    assignBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Assigning...';
-    assignBtn.disabled = true;
-    
-    try {
-        console.log('📋 Assignment request:');
-        console.log('   Incident ID:', currentAssignIncidentId);
-        console.log('   Source:', currentAssignIncidentSource);
-        console.log('   Officer:', selectedOfficer);
-        
-        const response = await fetch(`/api/incidents/${currentAssignIncidentId}/assign-officer`, {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                assigned_officer: selectedOfficer,
-                source: currentAssignIncidentSource
-            })
-        });
-        
-        const result = await response.json();
-        console.log('📋 Assignment response:', result);
-        
-        if (response.ok) {
-            // Show success message
-            const successMsg = `Officer ${selectedOfficer} assigned successfully! Case added to ASSIGNED_CASES collection.`;
-            
-            // Close modal
-            const modal = bootstrap.Modal.getInstance(document.getElementById('assignOfficerModal'));
-            modal.hide();
-            
-            // Show success alert
-            showAlert('success', successMsg);
-            
-            // Update the UI without full page reload
-            updateIncidentAssignmentUI(currentAssignIncidentId, selectedOfficer);
-            
-            // Refresh the page after 2 seconds to ensure all data is synced
-            setTimeout(() => {
-                location.reload();
-            }, 2000);
-            
-        } else {
-            alert('Error: ' + (result.error || result.message || 'Unknown error'));
-        }
-    } catch (error) {
-        console.error('Error assigning officer:', error);
-        alert('Network error: ' + error.message);
-    } finally {
-        // Restore button state
-        assignBtn.innerHTML = originalText;
-        assignBtn.disabled = false;
-    }
-}
-
-// Helper function to show alerts
-function showAlert(type, message) {
-    const alertDiv = document.createElement('div');
-    alertDiv.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
-    alertDiv.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
-    alertDiv.innerHTML = `
-        ${message}
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    `;
-    
-    document.body.appendChild(alertDiv);
-    
-    // Auto remove after 5 seconds
-    setTimeout(() => {
-        if (alertDiv.parentNode) {
-            alertDiv.remove();
-        }
-    }, 5000);
-}
-
-// Function to update assignment statistics
-function updateAssignmentStats() {
-    const assignedRows = document.querySelectorAll('.assigned-incident').length;
-    const unassignedRows = document.querySelectorAll('.unassigned-incident').length;
-    const totalRows = assignedRows + unassignedRows;
-    
-    // Update counts in the stats cards
-    const assignedCountElement = document.getElementById('assignedCount');
-    const unassignedCountElement = document.getElementById('unassignedCount');
-    const visibleCountElement = document.getElementById('visibleCount');
-    
-    if (assignedCountElement) assignedCountElement.textContent = assignedRows;
-    if (unassignedCountElement) unassignedCountElement.textContent = unassignedRows;
-    if (visibleCountElement) visibleCountElement.textContent = totalRows;
-    
-    console.log(`📊 Stats updated: Assigned=${assignedRows}, Unassigned=${unassignedRows}, Total=${totalRows}`);
-}
-
-// Also add this helper function to ensure stats update correctly
-function updateAssignmentStats() {
-    const assignedRows = document.querySelectorAll('.assigned-incident').length;
-    const unassignedRows = document.querySelectorAll('.unassigned-incident').length;
-    const totalRows = assignedRows + unassignedRows;
-    
-    // Update counts in the stats cards
-    document.getElementById('assignedCount').textContent = assignedRows;
-    document.getElementById('unassignedCount').textContent = unassignedRows;
-    document.getElementById('visibleCount').textContent = totalRows;
-}
-
-async function updateIncident() {
-    if (!currentEditIncidentId) return;
-    
-    const form = document.getElementById('editIncidentForm');
-    const formData = new FormData(form);
-    
-    const updateData = {};
-    for (const [key, value] of formData.entries()) {
-        updateData[key] = value;
-    }
-    
-    try {
-        const response = await fetch('/api/incidents/' + currentEditIncidentId, {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(updateData)
-        });
-        
-        const result = await response.json();
-        
-        if (response.ok) {
-            alert('Incident updated successfully!');
-            const modal = bootstrap.Modal.getInstance(document.getElementById('editIncidentModal'));
-            modal.hide();
-            location.reload();
-        } else {
-            alert('Error: ' + result.error);
-        }
-    } catch (error) {
-        console.error('Error:', error);
-        alert('Error updating incident');
-    }
-    // Debug function to check assignment status
-async function debugAssignment(incidentId) {
-    console.log('🧪 Debugging assignment for incident:', incidentId);
-    
-    try {
-        // Check in assigned_cases collection
-        const assignedResponse = await fetch(`/api/incidents/${incidentId}/assignment-status`);
-        const assignedData = await assignedResponse.json();
-        console.log('Assignment status:', assignedData);
-        
-        // Check incident details
-        const detailsResponse = await fetch(`/api/incidents/${incidentId}/details?source=police`);
-        const detailsData = await detailsResponse.json();
-        console.log('Incident details:', {
-            assigned_officer: detailsData.assigned_officer,
-            is_assigned: detailsData.is_assigned
-        });
-        
-        return { assignedData, detailsData };
-    } catch (error) {
-        console.error('Debug error:', error);
-    }
-}
-
-// Add debug button to each row (temporary)
-document.addEventListener('DOMContentLoaded', function() {
-    // Add debug button to each row
-    setTimeout(() => {
-        document.querySelectorAll('.incident-row').forEach(row => {
-            const incidentId = row.dataset.incidentId;
-            const debugBtn = document.createElement('button');
-            debugBtn.className = 'btn btn-sm btn-warning ms-2';
-            debugBtn.innerHTML = '<i class="fas fa-bug"></i>';
-            debugBtn.title = 'Debug Assignment';
-            debugBtn.onclick = (e) => {
-                e.stopPropagation();
-                debugAssignment(incidentId);
-            };
-            
-            const actionsCell = row.querySelector('td:last-child');
-            if (actionsCell) {
-                actionsCell.querySelector('.btn-group').appendChild(debugBtn);
+            // Details Button
+            const detailsBtn = e.target.closest('.view-details-btn');
+            if(detailsBtn) {
+                const row = detailsBtn.closest('tr');
+                viewDetails(row.dataset.incidentId, row.dataset.source);
             }
         });
-        
-        console.log('🔧 Debug buttons added to each row');
-    }, 1000);
-});
-}
-
-function showAddIncidentModal() {
-    const modal = new bootstrap.Modal(document.getElementById('addIncidentModal'));
-    modal.show();
-}
-
-
-
-// Test the assignment endpoint manually
-async function testAssignment() {
-    console.log('🧪 Testing assignment endpoint...');
-    
-    // First, let's get a real incident ID from the table
-    const firstRow = document.querySelector('#incidentsTable tbody tr');
-    if (!firstRow) {
-        console.log('No incidents found in table');
-        return;
-    }
-    
-    const incidentId = firstRow.dataset.incidentId;
-    const source = firstRow.dataset.source;
-    
-    console.log('Testing with:');
-    console.log('  Incident ID:', incidentId);
-    console.log('  Source:', source);
-    
-    try {
-        // First test the assignment endpoint with a simple POST
-        const testData = {
-            assigned_officer: '{{ current_user.username }}',
-            source: source
-        };
-        
-        console.log('Test data:', testData);
-        
-        const response = await fetch(`/api/incidents/${incidentId}/assign-officer`, {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(testData)
-        });
-        
-        const result = await response.json();
-        console.log('Test response:', result);
-        
-        if (response.ok) {
-            alert('Test successful: ' + result.message);
-        } else {
-            alert('Test failed: ' + result.error);
-        }
-    } catch (error) {
-        console.error('Test error:', error);
-        alert('Test error: ' + error.message);
-    }
-}
-
-// Add test button to page (optional)
-// Add this to your DOMContentLoaded event in incidents.html
-document.addEventListener('DOMContentLoaded', function() {
-    // Debug: Log all incident data
-    console.log('🔍 All incident rows:');
-    document.querySelectorAll('.incident-row').forEach((row, index) => {
-        console.log(`Row ${index + 1}:`, {
-            id: row.dataset.incidentId,
-            source: row.dataset.source,
-            isAssigned: row.dataset.isAssigned,
-            title: row.dataset.title
-        });
     });
-    
-    // Test the API endpoints
-    testViewDetailsAPI();
-});
 
-async function testViewDetailsAPI() {
-    // Test the first incident to see if API works
-    const firstRow = document.querySelector('.incident-row');
-    if (firstRow) {
-        const incidentId = firstRow.dataset.incidentId;
-        const source = firstRow.dataset.source;
-        
-        console.log('🧪 Testing View Details API for:', { incidentId, source });
-        
-        try {
-            const response = await fetch(`/api/incidents/${incidentId}/details?source=${source}`);
-            console.log('API Response status:', response.status);
-            const data = await response.json();
-            console.log('API Response data:', data);
-        } catch (error) {
-            console.error('API Test Error:', error);
-        }
-    }
-}
+    // --- FUNCTIONS ---
 
-async function submitIncident() {
-    const form = document.getElementById('incidentForm');
-    const formData = new FormData(form);
-    
-    const incidentData = {};
-    for (const [key, value] of formData.entries()) {
-        incidentData[key] = value;
+    function showAddIncidentModal() {
+        cleanupModals();
+        new bootstrap.Modal(document.getElementById('addIncidentModal')).show();
     }
-    
-    // Validate that location was selected
-    if (!incidentData.latitude || !incidentData.longitude) {
-        alert('Please select a location on the map by clicking on it');
-        return;
-    }
-    
-    try {
-        const response = await fetch('/api/incidents', {
+
+    function submitNewIncident() {
+        const form = document.getElementById('addIncidentForm');
+        const data = Object.fromEntries(new FormData(form).entries());
+        
+        fetch('/api/incidents', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(incidentData)
-        });
-        
-        const result = await response.json();
-        
-        if (response.ok) {
-            alert('Incident added successfully!');
-            const modal = bootstrap.Modal.getInstance(document.getElementById('addIncidentModal'));
-            modal.hide();
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(data)
+        })
+        .then(res => res.json())
+        .then(() => {
+            alert('Incident Reported!');
             location.reload();
-        } else {
-            alert('Error: ' + result.error);
-        }
-    } catch (error) {
-        console.error('Error submitting incident:', error);
-        alert('Error submitting incident');
+        })
+        .catch(err => alert('Error reporting incident'));
     }
-}
 
-function searchIncidents() {
-    const searchTerm = document.getElementById('searchInput').value.toLowerCase();
-    const rows = document.querySelectorAll('#incidentsTable tbody tr.incident-row');
-    const currentAssignmentFilter = document.querySelector('.btn-group .btn.active').textContent.toLowerCase();
-    
-    rows.forEach(row => {
-        const text = row.textContent.toLowerCase();
-        const isAssigned = row.dataset.isAssigned === 'true';
+    function openAssignModal(id, source) {
+        document.getElementById('assignIncidentId').value = id;
+        document.getElementById('assignIncidentSource').value = source;
         
-        let shouldShow = text.includes(searchTerm);
+        const select = document.getElementById('officerSelect');
+        select.innerHTML = '<option>Loading...</option>';
         
-        // Apply assignment filter
-        if (currentAssignmentFilter.includes('assigned') && !isAssigned) {
-            shouldShow = false;
-        } else if (currentAssignmentFilter.includes('unassigned') && isAssigned) {
-            shouldShow = false;
-        }
-        
-        row.style.display = shouldShow ? '' : 'none';
-    });
-}
-
-function printReport() {
-    window.print();
-}
-
-// Add search on input
-const searchInput = document.getElementById('searchInput');
-if (searchInput) {
-    searchInput.addEventListener('input', searchIncidents);
-}
-
-// Test API endpoints for debugging
-async function testAPIs() {
-    try {
-        console.log('🧪 Testing API endpoints...');
-        
-        // Test police incidents API
-        const policeResponse = await fetch('/api/incidents');
-        const policeData = await policeResponse.json();
-        console.log('Police incidents API:', policeData);
-        
-        // Test officers API
-        const officersResponse = await fetch('/api/police-officers');
-        const officersData = await officersResponse.json();
-        console.log('Officers API (filtered by station):', officersData);
-        
-    } catch (error) {
-        console.error('API test error:', error);
+        fetch('/api/police-officers')
+            .then(res => res.json())
+            .then(data => {
+                select.innerHTML = '<option value="">Select Officer...</option>';
+                data.forEach(off => {
+                    const opt = document.createElement('option');
+                    opt.value = off.username;
+                    opt.textContent = `${off.full_name} (${off.badge_number})`;
+                    select.appendChild(opt);
+                });
+                new bootstrap.Modal(document.getElementById('assignOfficerModal')).show();
+            });
     }
-}
 
-// Run API tests when page loads
-document.addEventListener('DOMContentLoaded', function() {
-    testAPIs();
-});
+    function submitAssignment() {
+        const id = document.getElementById('assignIncidentId').value;
+        const source = document.getElementById('assignIncidentSource').value;
+        const officer = document.getElementById('officerSelect').value;
+
+        if(!officer) return alert("Select an officer");
+
+        fetch(`/api/incidents/${id}/assign-officer`, {
+            method: 'PUT',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({assigned_officer: officer, source: source})
+        })
+        .then(res => res.json())
+        .then(() => {
+            alert("Assigned Successfully!");
+            location.reload();
+        });
+    }
+
+    function viewDetails(id, source) {
+        fetch(`/api/incidents/${id}/details?source=${source}`)
+            .then(res => res.json())
+            .then(data => {
+                document.getElementById('detailsContent').innerHTML = `
+                    <h4>${data.title}</h4>
+                    <p class="text-muted">ID: ${data.incident_id}</p>
+                    <hr>
+                    <div class="row">
+                        <div class="col-md-6"><p><strong>Type:</strong> ${data.incident_type}</p></div>
+                        <div class="col-md-6"><p><strong>Severity:</strong> ${data.severity}</p></div>
+                        <div class="col-md-6"><p><strong>Status:</strong> ${data.status}</p></div>
+                        <div class="col-md-6"><p><strong>Reported By:</strong> ${data.reported_by}</p></div>
+                    </div>
+                    <p><strong>Description:</strong><br>${data.description}</p>
+                    <p><strong>Location:</strong><br>${data.address}</p>
+                `;
+                new bootstrap.Modal(document.getElementById('detailsModal')).show();
+            });
+    }
+
+    function searchIncidents() {
+        const term = document.getElementById('searchInput').value.toLowerCase();
+        const rows = document.querySelectorAll('tbody tr');
+        rows.forEach(row => {
+            row.style.display = row.innerText.toLowerCase().includes(term) ? '' : 'none';
+        });
+    }
+
+    function filterByAssignment(type) {
+        const rows = document.querySelectorAll('.incident-row');
+        document.querySelectorAll('.btn-group .btn').forEach(b => b.classList.remove('active'));
+        event.target.classList.add('active');
+
+        rows.forEach(row => {
+            const isAssigned = row.dataset.isAssigned === 'True';
+            let show = type === 'all' || (type === 'assigned' && isAssigned) || (type === 'unassigned' && !isAssigned);
+            row.style.display = show ? '' : 'none';
+        });
+    }
 </script>
-
-<style>
-.stats-card {
-    text-align: center;
-    padding: 20px;
-}
-
-.stats-card i {
-    font-size: 2rem;
-    margin-bottom: 10px;
-    color: var(--police-primary);
-}
-
-.stats-card h3 {
-    font-size: 1.8rem;
-    margin-bottom: 5px;
-    font-weight: 700;
-}
-
-.stats-card p {
-    color: var(--police-gray);
-    margin-bottom: 0;
-    font-size: 0.9rem;
-}
-
-/* Assignment Status Styles */
-.unassigned-incident {
-    background-color: #fff5f5 !important;
-    border-left: 4px solid #dc3545 !important;
-}
-
-.assigned-incident {
-    background-color: #ffffff !important;
-    border-left: 4px solid #198754 !important;
-}
-
-.incident-row:hover {
-    transform: translateX(5px);
-    transition: transform 0.2s ease;
-}
-
-.assignment-status {
-    text-align: center;
-}
-
-.assigned-badge, .unassigned-badge {
-    font-size: 0.75rem;
-    padding: 0.35em 0.65em;
-}
-
-/* Stats card colors for assignment */
-.assigned-stats {
-    border-left: 4px solid #198754 !important;
-}
-
-.assigned-stats i {
-    color: #198754 !important;
-}
-
-.unassigned-stats {
-    border-left: 4px solid #dc3545 !important;
-}
-
-.unassigned-stats i {
-    color: #dc3545 !important;
-}
-
-/* Highlight unassigned incidents */
-.unassigned-incident td:first-child {
-    border-left: 4px solid #dc3545;
-}
-
-.assigned-incident td:first-child {
-    border-left: 4px solid #198754;
-}
-
-/* Assignment filter buttons */
-.btn-assignment-filter.active {
-    background-color: #0d6efd;
-    color: white;
-}
-
-.table th {
-    border-top: none;
-    font-weight: 600;
-    color: var(--police-dark);
-}
-
-.btn-group-sm > .btn {
-    padding: 0.25rem 0.5rem;
-}
-
-.map-marker {
-    font-size: 20px;
-    text-align: center;
-    text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
-}
-
-.custom-marker {
-    background: transparent;
-    border: none;
-}
-</style>
 {% endblock %}
