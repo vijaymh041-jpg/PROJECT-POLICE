@@ -15,78 +15,386 @@ from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, 
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib import colors
 from reportlab.lib.units import inch
-import re  # Add this import
+import re
 
 app = Flask(__name__)
 app.config.from_object('config.Config')
 
-# Authentic Karnataka Police Stations List
-KARNATAKA_POLICE_STATIONS = [
-    # Bengaluru City Police Stations
-    "Ashok Nagar Police Station", "Basavanagudi Police Station", "Chamarajpet Police Station",
-    "Commercial Street Police Station", "Cubbon Park Police Station", "Halasuru Police Station",
-    "High Grounds Police Station", "Jayanagar Police Station", "K.G. Halli Police Station",
-    "K.R. Market Police Station", "Koramangala Police Station", "Madiwala Police Station",
-    "Mahalakshmi Layout Police Station", "Malleshwaram Police Station", "Seshadripuram Police Station",
-    "Shivajinagar Police Station", "Ulsoor Police Station", "Vijayanagar Police Station",
-    "Whitefield Police Station", "Yelahanka Police Station",
-    
-    # Davanagere District Police Stations
-    "Davanagere Traffic Police Station", "Davanagere Women Police Station", "Jagalur Police Station",
-    "Channagiri Police Station", "Harapanahalli Police Station", "Harihar Police Station",
-    "Honnali Police Station", "Nyamathi Police Station",
-    
-    # Mysuru City Police Stations
-    "Vijayanagar Police Station Mysuru", "Nazarabad Police Station", "K.R. Police Station Mysuru",
-    "Metagalli Police Station", "Lashkar Police Station", "Jayanagar Police Station Mysuru",
-    
-    # Hubballi-Dharwad Police Stations
-    "Hubballi Traffic Police Station", "Old Hubballi Police Station", "Vidyanagar Police Station",
-    "Dharwad Police Station", "Keshavpur Police Station",
-    
-    # Mangaluru Police Stations
-    "Mangaluru North Police Station", "Mangaluru South Police Station", "Kadri Police Station",
-    "Bunder Police Station", "Pandeshwar Police Station",
-    
-    # Belagavi Police Stations
-    "Belagavi Traffic Police Station", "Khanapur Police Station", "Gokul Road Police Station",
-    "Sadashiv Nagar Police Station",
-    
-    # Kalaburagi Police Stations
-    "Kalaburagi Traffic Police Station", "Jewargi Police Station", "Sedam Police Station",
-    
-    # Other Major District Police Stations
-    "Tumakuru Rural Police Station", "Shivamogga Traffic Police Station", "Ballari Rural Police Station",
-    "Vijayapura City Police Station", "Hassan Traffic Police Station", "Udupi Women Police Station",
-    "Mandya Rural Police Station", "Kolar Traffic Police Station", "Kolar Traffic Police Station",
-    "Chikkamagaluru Police Station", "Chitradurga Police Station", "Raichur Rural Police Station", 
-    "Bidar City Police Station",
-    "Bagalkote Police Station", "Gadag Police Station", "Haveri Police Station",
-    "Koppal Police Station", "Yadgir Police Station", "Ramanagara Police Station",
-    "Chikkaballapura Police Station", "Kodagu Madikeri Police Station", "Dakshina Kannada Puttur Police Station"
-]
+# Define IST Timezone
+IST = timezone(timedelta(hours=5, minutes=30))
+
+# --- AUTHENTIC POLICE DATABASE (Source of Truth) ---
+# Includes specific user requests and comprehensive district mapping.
+POLICE_DATABASE = {
+    # --- USER REQUESTED SPECIFICS ---
+    "KTJ Nagara-2 Police Station": {"ward": "26", "reg_no": "KA17026"},
+    "KTJ Nagara-1 Police Station": {"ward": "27", "reg_no": "KA17027"},
+
+    # --- BENGALURU CITY (KA01) ---
+    "Ashok Nagar Police Station": {"ward": "111", "reg_no": "KA01111"},
+    "Basavanagudi Police Station": {"ward": "154", "reg_no": "KA01154"},
+    "Chamarajpet Police Station": {"ward": "139", "reg_no": "KA01139"},
+    "Commercial Street Police Station": {"ward": "110", "reg_no": "KA01110"},
+    "Cubbon Park Police Station": {"ward": "109", "reg_no": "KA01109"},
+    "Halasuru Police Station": {"ward": "112", "reg_no": "KA01112"},
+    "High Grounds Police Station": {"ward": "093", "reg_no": "KA01093"},
+    "Jayanagar Police Station": {"ward": "169", "reg_no": "KA01169"},
+    "K.G. Halli Police Station": {"ward": "030", "reg_no": "KA01030"},
+    "K.R. Market Police Station": {"ward": "138", "reg_no": "KA01138"},
+    "Koramangala Police Station": {"ward": "151", "reg_no": "KA01151"},
+    "Madiwala Police Station": {"ward": "172", "reg_no": "KA01172"},
+    "Mahalakshmi Layout Police Station": {"ward": "068", "reg_no": "KA01068"},
+    "Malleshwaram Police Station": {"ward": "045", "reg_no": "KA01045"},
+    "Seshadripuram Police Station": {"ward": "094", "reg_no": "KA01094"},
+    "Shivajinagar Police Station": {"ward": "108", "reg_no": "KA01108"},
+    "Ulsoor Police Station": {"ward": "089", "reg_no": "KA01089"},
+    "Vijayanagar Police Station": {"ward": "123", "reg_no": "KA01123"},
+    "Whitefield Police Station": {"ward": "084", "reg_no": "KA01084"},
+    "Yelahanka Police Station": {"ward": "004", "reg_no": "KA01004"},
+
+    # --- DAVANAGERE DISTRICT (KA17) ---
+    "Davanagere Traffic Police Station": {"ward": "001", "reg_no": "KA17001"},
+    "Davanagere Women Police Station": {"ward": "002", "reg_no": "KA17002"},
+    "Jagalur Police Station": {"ward": "012", "reg_no": "KA17012"},
+    "Channagiri Police Station": {"ward": "014", "reg_no": "KA17014"},
+    "Harapanahalli Police Station": {"ward": "018", "reg_no": "KA17018"},
+    "Harihar Police Station": {"ward": "020", "reg_no": "KA17020"},
+    "Honnali Police Station": {"ward": "022", "reg_no": "KA17022"},
+    "Nyamathi Police Station": {"ward": "024", "reg_no": "KA17024"},
+    "Davanagere Extension Police Station": {"ward": "010", "reg_no": "KA17010"},
+    "Davanagere Rural Police Station": {"ward": "015", "reg_no": "KA17015"},
+
+    # --- MYSURU CITY (KA09) ---
+    "Vijayanagar Police Station Mysuru": {"ward": "031", "reg_no": "KA09031"},
+    "Nazarabad Police Station": {"ward": "030", "reg_no": "KA09030"},
+    "K.R. Police Station Mysuru": {"ward": "035", "reg_no": "KA09035"},
+    "Metagalli Police Station": {"ward": "018", "reg_no": "KA09018"},
+    "Lashkar Police Station": {"ward": "022", "reg_no": "KA09022"},
+    "Jayanagar Police Station Mysuru": {"ward": "040", "reg_no": "KA09040"},
+    "Saraswathipuram Police Station": {"ward": "042", "reg_no": "KA09042"},
+    "Kuvempunagar Police Station": {"ward": "045", "reg_no": "KA09045"},
+    "Ashokapuram Police Station": {"ward": "048", "reg_no": "KA09048"},
+
+    # --- HUBBALLI-DHARWAD (KA25) ---
+    "Hubballi Traffic Police Station": {"ward": "050", "reg_no": "KA25050"},
+    "Old Hubballi Police Station": {"ward": "055", "reg_no": "KA25055"},
+    "Vidyanagar Police Station": {"ward": "060", "reg_no": "KA25060"},
+    "Dharwad Police Station": {"ward": "010", "reg_no": "KA25010"},
+    "Keshavpur Police Station": {"ward": "062", "reg_no": "KA25062"},
+    "Navanagar Police Station": {"ward": "045", "reg_no": "KA25045"},
+    "Suburban Police Station Hubballi": {"ward": "052", "reg_no": "KA25052"},
+    "Dharwad Town Police Station": {"ward": "012", "reg_no": "KA25012"},
+
+    # --- MANGALURU CITY (KA19) ---
+    "Mangaluru North Police Station": {"ward": "020", "reg_no": "KA19020"},
+    "Mangaluru South Police Station": {"ward": "021", "reg_no": "KA19021"},
+    "Kadri Police Station": {"ward": "022", "reg_no": "KA19022"},
+    "Bunder Police Station": {"ward": "025", "reg_no": "KA19025"},
+    "Pandeshwar Police Station": {"ward": "028", "reg_no": "KA19028"},
+    "Urwa Police Station": {"ward": "018", "reg_no": "KA19018"},
+    "Barke Police Station": {"ward": "019", "reg_no": "KA19019"},
+    "Kankanady Police Station": {"ward": "030", "reg_no": "KA19030"},
+
+    # --- BELAGAVI (KA22) ---
+    "Belagavi Traffic Police Station": {"ward": "005", "reg_no": "KA22005"},
+    "Khanapur Police Station": {"ward": "050", "reg_no": "KA22050"},
+    "Gokul Road Police Station": {"ward": "015", "reg_no": "KA22015"},
+    "Sadashiv Nagar Police Station": {"ward": "020", "reg_no": "KA22020"},
+    "Camp Police Station Belagavi": {"ward": "008", "reg_no": "KA22008"},
+    "Khade Bazar Police Station": {"ward": "010", "reg_no": "KA22010"},
+    "Market Police Station Belagavi": {"ward": "012", "reg_no": "KA22012"},
+    "APMC Police Station Belagavi": {"ward": "025", "reg_no": "KA22025"},
+
+    # --- KALABURAGI (KA32) ---
+    "Kalaburagi Traffic Police Station": {"ward": "005", "reg_no": "KA32005"},
+    "Jewargi Police Station": {"ward": "040", "reg_no": "KA32040"},
+    "Sedam Police Station": {"ward": "045", "reg_no": "KA32045"},
+    "Station Bazar Police Station": {"ward": "010", "reg_no": "KA32010"},
+    "Ashok Nagar Police Station Kalaburagi": {"ward": "015", "reg_no": "KA32015"},
+    "Brahmapur Police Station": {"ward": "020", "reg_no": "KA32020"},
+
+    # --- TUMAKURU DISTRICT (KA06) ---
+    "Tumakuru Town Police Station": {"ward": "001", "reg_no": "KA06001"},
+    "Tumakuru Rural Police Station": {"ward": "005", "reg_no": "KA06005"},
+    "New Extension Police Station Tumakuru": {"ward": "003", "reg_no": "KA06003"},
+    "Tilak Park Police Station": {"ward": "002", "reg_no": "KA06002"},
+    "Kyathasandra Police Station": {"ward": "006", "reg_no": "KA06006"},
+    "Gubbi Police Station": {"ward": "020", "reg_no": "KA06020"},
+    "Kunigal Police Station": {"ward": "030", "reg_no": "KA06030"},
+    "Sira Town Police Station": {"ward": "040", "reg_no": "KA06040"},
+    "Tiptur Town Police Station": {"ward": "050", "reg_no": "KA06050"},
+    "Madhugiri Police Station": {"ward": "060", "reg_no": "KA06060"},
+    "Pavagada Police Station": {"ward": "070", "reg_no": "KA06070"},
+    "Chikkanayakanahalli Police Station": {"ward": "080", "reg_no": "KA06080"},
+    "Koratagere Police Station": {"ward": "090", "reg_no": "KA06090"},
+    "Turuvekere Police Station": {"ward": "095", "reg_no": "KA06095"},
+    "Hebburu Police Station": {"ward": "098", "reg_no": "KA06098"},
+
+    # --- SHIVAMOGGA DISTRICT (KA14) ---
+    "Shivamogga Doddapete Police Station": {"ward": "001", "reg_no": "KA14001"},
+    "Shivamogga Kote Police Station": {"ward": "002", "reg_no": "KA14002"},
+    "Tunganagar Police Station": {"ward": "005", "reg_no": "KA14005"},
+    "Vinobhanagar Police Station": {"ward": "004", "reg_no": "KA14004"},
+    "Shivamogga Rural Police Station": {"ward": "010", "reg_no": "KA14010"},
+    "Bhadravathi Old Town Police Station": {"ward": "020", "reg_no": "KA14020"},
+    "Bhadravathi New Town Police Station": {"ward": "021", "reg_no": "KA14021"},
+    "Paper Town Police Station": {"ward": "022", "reg_no": "KA14022"},
+    "Sagar Town Police Station": {"ward": "030", "reg_no": "KA14030"},
+    "Sagar Rural Police Station": {"ward": "031", "reg_no": "KA14031"},
+    "Shikaripura Police Station": {"ward": "040", "reg_no": "KA14040"},
+    "Soraba Police Station": {"ward": "050", "reg_no": "KA14050"},
+    "Thirthahalli Police Station": {"ward": "060", "reg_no": "KA14060"},
+    "Hosanagara Police Station": {"ward": "070", "reg_no": "KA14070"},
+
+    # --- BALLARI DISTRICT (KA34) ---
+    "Ballari Brucepet Police Station": {"ward": "001", "reg_no": "KA34001"},
+    "Ballari Cowl Bazar Police Station": {"ward": "002", "reg_no": "KA34002"},
+    "Ballari Gandhinagar Police Station": {"ward": "003", "reg_no": "KA34003"},
+    "Ballari Rural Police Station": {"ward": "005", "reg_no": "KA34005"},
+    "APMC Yard Police Station Ballari": {"ward": "008", "reg_no": "KA34008"},
+    "Kurugodu Police Station": {"ward": "015", "reg_no": "KA34015"},
+    "Siruguppa Police Station": {"ward": "020", "reg_no": "KA34020"},
+    "Sandur Police Station": {"ward": "030", "reg_no": "KA34030"},
+    "Kudligi Police Station": {"ward": "040", "reg_no": "KA34040"},
+    "Hospet Town Police Station": {"ward": "050", "reg_no": "KA34050"},
+    "Hospet Rural Police Station": {"ward": "051", "reg_no": "KA34051"},
+    "Hagaribommanahalli Police Station": {"ward": "060", "reg_no": "KA34060"},
+    "Kampli Police Station": {"ward": "065", "reg_no": "KA34065"},
+    "Toranagallu Police Station": {"ward": "070", "reg_no": "KA34070"},
+
+    # --- VIJAYAPURA DISTRICT (KA28) ---
+    "Vijayapura Gandhi Chowk Police Station": {"ward": "001", "reg_no": "KA28001"},
+    "Vijayapura Gol Gumbaz Police Station": {"ward": "002", "reg_no": "KA28002"},
+    "Vijayapura Jalnagar Police Station": {"ward": "003", "reg_no": "KA28003"},
+    "Vijayapura APMC Police Station": {"ward": "004", "reg_no": "KA28004"},
+    "Vijayapura Rural Police Station": {"ward": "005", "reg_no": "KA28005"},
+    "Indi Police Station": {"ward": "020", "reg_no": "KA28020"},
+    "Sindagi Police Station": {"ward": "030", "reg_no": "KA28030"},
+    "Basavana Bagewadi Police Station": {"ward": "040", "reg_no": "KA28040"},
+    "Muddebihal Police Station": {"ward": "050", "reg_no": "KA28050"},
+    "Talikoti Police Station": {"ward": "055", "reg_no": "KA28055"},
+    "Tikota Police Station": {"ward": "060", "reg_no": "KA28060"},
+
+    # --- HASSAN DISTRICT (KA13) ---
+    "Hassan Town Police Station": {"ward": "001", "reg_no": "KA13001"},
+    "Hassan Extension Police Station": {"ward": "002", "reg_no": "KA13002"},
+    "Hassan Rural Police Station": {"ward": "005", "reg_no": "KA13005"},
+    "Arsikere Town Police Station": {"ward": "010", "reg_no": "KA13010"},
+    "Arsikere Rural Police Station": {"ward": "011", "reg_no": "KA13011"},
+    "Channarayapatna Town Police Station": {"ward": "020", "reg_no": "KA13020"},
+    "Sakleshpur Town Police Station": {"ward": "030", "reg_no": "KA13030"},
+    "Belur Police Station": {"ward": "040", "reg_no": "KA13040"},
+    "Holenarasipura Police Station": {"ward": "050", "reg_no": "KA13050"},
+    "Arkalgud Police Station": {"ward": "060", "reg_no": "KA13060"},
+    "Alur Police Station": {"ward": "070", "reg_no": "KA13070"},
+    "Yeslur Police Station": {"ward": "075", "reg_no": "KA13075"},
+    "Nuggehalli Police Station": {"ward": "080", "reg_no": "KA13080"},
+
+    # --- UDUPI DISTRICT (KA20) ---
+    "Udupi Town Police Station": {"ward": "001", "reg_no": "KA20001"},
+    "Malpe Police Station": {"ward": "005", "reg_no": "KA20005"},
+    "Manipal Police Station": {"ward": "006", "reg_no": "KA20006"},
+    "Brahmavara Police Station": {"ward": "010", "reg_no": "KA20010"},
+    "Kundapura Police Station": {"ward": "020", "reg_no": "KA20020"},
+    "Byndoor Police Station": {"ward": "030", "reg_no": "KA20030"},
+    "Karkala Town Police Station": {"ward": "040", "reg_no": "KA20040"},
+    "Karkala Rural Police Station": {"ward": "041", "reg_no": "KA20041"},
+    "Kaup Police Station": {"ward": "050", "reg_no": "KA20050"},
+    "Padubidri Police Station": {"ward": "055", "reg_no": "KA20055"},
+    "Kollur Police Station": {"ward": "060", "reg_no": "KA20060"},
+    "Kota Police Station": {"ward": "065", "reg_no": "KA20065"},
+    "Shankaranarayana Police Station": {"ward": "070", "reg_no": "KA20070"},
+
+    # --- MANDYA DISTRICT (KA11) ---
+    "Mandya West Police Station": {"ward": "001", "reg_no": "KA11001"},
+    "Mandya East Police Station": {"ward": "002", "reg_no": "KA11002"},
+    "Mandya Rural Police Station": {"ward": "005", "reg_no": "KA11005"},
+    "Maddur Police Station": {"ward": "010", "reg_no": "KA11010"},
+    "Malavalli Town Police Station": {"ward": "020", "reg_no": "KA11020"},
+    "Malavalli Rural Police Station": {"ward": "021", "reg_no": "KA11021"},
+    "Srirangapatna Police Station": {"ward": "030", "reg_no": "KA11030"},
+    "K.R. Pet Town Police Station": {"ward": "040", "reg_no": "KA11040"},
+    "Nagamangala Police Station": {"ward": "050", "reg_no": "KA11050"},
+    "Pandavapura Police Station": {"ward": "060", "reg_no": "KA11060"},
+    "Arakere Police Station": {"ward": "070", "reg_no": "KA11070"},
+    "Basaralu Police Station": {"ward": "080", "reg_no": "KA11080"},
+    "Bellur Police Station": {"ward": "090", "reg_no": "KA11090"},
+
+    # --- KOLAR DISTRICT (KA07) ---
+    "Kolar Town Police Station": {"ward": "001", "reg_no": "KA07001"},
+    "Kolar Rural Police Station": {"ward": "005", "reg_no": "KA07005"},
+    "Galpet Police Station": {"ward": "006", "reg_no": "KA07006"},
+    "Robertsonpet Police Station (KGF)": {"ward": "010", "reg_no": "KA07010"},
+    "Andersonpet Police Station (KGF)": {"ward": "011", "reg_no": "KA07011"},
+    "Bangarpet Police Station": {"ward": "020", "reg_no": "KA07020"},
+    "Malur Police Station": {"ward": "030", "reg_no": "KA07030"},
+    "Mulbagal Town Police Station": {"ward": "040", "reg_no": "KA07040"},
+    "Srinivaspura Police Station": {"ward": "050", "reg_no": "KA07050"},
+    "Kolar Traffic Police Station": {"ward": "002", "reg_no": "KA07002"},
+    "Vemagal Police Station": {"ward": "060", "reg_no": "KA07060"},
+
+    # --- CHIKKAMAGALURU DISTRICT (KA18) ---
+    "Chikkamagaluru Town Police Station": {"ward": "001", "reg_no": "KA18001"},
+    "Basavanahalli Police Station": {"ward": "002", "reg_no": "KA18002"},
+    "Chikkamagaluru Rural Police Station": {"ward": "005", "reg_no": "KA18005"},
+    "Aldur Police Station": {"ward": "010", "reg_no": "KA18010"},
+    "Mudigere Police Station": {"ward": "020", "reg_no": "KA18020"},
+    "Koppa Police Station": {"ward": "030", "reg_no": "KA18030"},
+    "Sringeri Police Station": {"ward": "040", "reg_no": "KA18040"},
+    "N.R. Pura Police Station": {"ward": "050", "reg_no": "KA18050"},
+    "Kadur Police Station": {"ward": "060", "reg_no": "KA18060"},
+    "Tarikere Police Station": {"ward": "070", "reg_no": "KA18070"},
+    "Balehonnur Police Station": {"ward": "080", "reg_no": "KA18080"},
+
+    # --- CHITRADURGA DISTRICT (KA16) ---
+    "Chitradurga Fort Police Station": {"ward": "001", "reg_no": "KA16001"},
+    "Chitradurga Extension Police Station": {"ward": "002", "reg_no": "KA16002"},
+    "Chitradurga Rural Police Station": {"ward": "005", "reg_no": "KA16005"},
+    "Hiriyur Town Police Station": {"ward": "010", "reg_no": "KA16010"},
+    "Challakere Police Station": {"ward": "020", "reg_no": "KA16020"},
+    "Hosadurga Police Station": {"ward": "030", "reg_no": "KA16030"},
+    "Holalkere Police Station": {"ward": "040", "reg_no": "KA16040"},
+    "Molakalmuru Police Station": {"ward": "050", "reg_no": "KA16050"},
+    "Aimangala Police Station": {"ward": "060", "reg_no": "KA16060"},
+    "Chitradurga Traffic Police Station": {"ward": "003", "reg_no": "KA16003"},
+    "Chitradurga Women Police Station": {"ward": "004", "reg_no": "KA16004"},
+
+    # --- RAICHUR DISTRICT (KA36) ---
+    "Raichur Sadar Bazar Police Station": {"ward": "001", "reg_no": "KA36001"},
+    "Raichur Market Yard Police Station": {"ward": "002", "reg_no": "KA36002"},
+    "Raichur West Circle Police Station": {"ward": "003", "reg_no": "KA36003"},
+    "Raichur Netaji Nagar Police Station": {"ward": "004", "reg_no": "KA36004"},
+    "Raichur Rural Police Station": {"ward": "005", "reg_no": "KA36005"},
+    "Manvi Police Station": {"ward": "010", "reg_no": "KA36010"},
+    "Sindhanur Town Police Station": {"ward": "020", "reg_no": "KA36020"},
+    "Sindhanur Rural Police Station": {"ward": "021", "reg_no": "KA36021"},
+    "Lingsugur Police Station": {"ward": "030", "reg_no": "KA36030"},
+    "Deodurga Police Station": {"ward": "040", "reg_no": "KA36040"},
+    "Maski Police Station": {"ward": "050", "reg_no": "KA36050"},
+
+    # --- BIDAR DISTRICT (KA38) ---
+    "Bidar Market Police Station": {"ward": "001", "reg_no": "KA38001"},
+    "Bidar Gandhi Gunj Police Station": {"ward": "002", "reg_no": "KA38002"},
+    "Bidar New Town Police Station": {"ward": "003", "reg_no": "KA38003"},
+    "Bidar Rural Police Station": {"ward": "005", "reg_no": "KA38005"},
+    "Basavakalyan Town Police Station": {"ward": "010", "reg_no": "KA38010"},
+    "Humnabad Police Station": {"ward": "020", "reg_no": "KA38020"},
+    "Bhalki Town Police Station": {"ward": "030", "reg_no": "KA38030"},
+    "Aurad Police Station": {"ward": "040", "reg_no": "KA38040"},
+    "Bidar Traffic Police Station": {"ward": "004", "reg_no": "KA38004"},
+    "Bidar Women Police Station": {"ward": "006", "reg_no": "KA38006"},
+
+    # --- BAGALKOTE DISTRICT (KA29) ---
+    "Bagalkote Town Police Station": {"ward": "001", "reg_no": "KA29001"},
+    "Bagalkote Navanagar Police Station": {"ward": "002", "reg_no": "KA29002"},
+    "Bagalkote Rural Police Station": {"ward": "005", "reg_no": "KA29005"},
+    "Jamkhandi Town Police Station": {"ward": "010", "reg_no": "KA29010"},
+    "Mudhol Police Station": {"ward": "020", "reg_no": "KA29020"},
+    "Badami Police Station": {"ward": "030", "reg_no": "KA29030"},
+    "Hungund Police Station": {"ward": "040", "reg_no": "KA29040"},
+    "Bilagi Police Station": {"ward": "050", "reg_no": "KA29050"},
+    "Ilkal Police Station": {"ward": "060", "reg_no": "KA29060"},
+    "Mahalingpur Police Station": {"ward": "070", "reg_no": "KA29070"},
+
+    # --- GADAG DISTRICT (KA26) ---
+    "Gadag Town Police Station": {"ward": "001", "reg_no": "KA26001"},
+    "Gadag Rural Police Station": {"ward": "005", "reg_no": "KA26005"},
+    "Betgeri Police Station": {"ward": "002", "reg_no": "KA26002"},
+    "Ron Police Station": {"ward": "010", "reg_no": "KA26010"},
+    "Shirahatti Police Station": {"ward": "020", "reg_no": "KA26020"},
+    "Mundargi Police Station": {"ward": "030", "reg_no": "KA26030"},
+    "Nargund Police Station": {"ward": "040", "reg_no": "KA26040"},
+    "Gajendragad Police Station": {"ward": "050", "reg_no": "KA26050"},
+    "Laxmeshwar Police Station": {"ward": "060", "reg_no": "KA26060"},
+
+    # --- HAVERI DISTRICT (KA27) ---
+    "Haveri Town Police Station": {"ward": "001", "reg_no": "KA27001"},
+    "Haveri Rural Police Station": {"ward": "005", "reg_no": "KA27005"},
+    "Ranebennur Town Police Station": {"ward": "010", "reg_no": "KA27010"},
+    "Ranebennur Rural Police Station": {"ward": "011", "reg_no": "KA27011"},
+    "Byadgi Police Station": {"ward": "020", "reg_no": "KA27020"},
+    "Hirekerur Police Station": {"ward": "030", "reg_no": "KA27030"},
+    "Shiggaon Police Station": {"ward": "040", "reg_no": "KA27040"},
+    "Hangal Police Station": {"ward": "050", "reg_no": "KA27050"},
+    "Savanur Police Station": {"ward": "060", "reg_no": "KA27060"},
+    "Bankapura Police Station": {"ward": "070", "reg_no": "KA27070"},
+
+    # --- KOPPAL DISTRICT (KA37) ---
+    "Koppal Town Police Station": {"ward": "001", "reg_no": "KA37001"},
+    "Koppal Rural Police Station": {"ward": "005", "reg_no": "KA37005"},
+    "Gangavathi Town Police Station": {"ward": "010", "reg_no": "KA37010"},
+    "Gangavathi Rural Police Station": {"ward": "011", "reg_no": "KA37011"},
+    "Kushtagi Police Station": {"ward": "020", "reg_no": "KA37020"},
+    "Yelburga Police Station": {"ward": "030", "reg_no": "KA37030"},
+    "Munirabad Police Station": {"ward": "040", "reg_no": "KA37040"},
+    "Karatagi Police Station": {"ward": "050", "reg_no": "KA37050"},
+
+    # --- YADGIR DISTRICT (KA33) ---
+    "Yadgir Town Police Station": {"ward": "001", "reg_no": "KA33001"},
+    "Yadgir Rural Police Station": {"ward": "005", "reg_no": "KA33005"},
+    "Shahapur Police Station": {"ward": "010", "reg_no": "KA33010"},
+    "Shorapur Police Station": {"ward": "020", "reg_no": "KA33020"},
+    "Gurmitkal Police Station": {"ward": "030", "reg_no": "KA33030"},
+    "Kembhavi Police Station": {"ward": "040", "reg_no": "KA33040"},
+
+    # --- RAMANAGARA DISTRICT (KA42) ---
+    "Ramanagara Town Police Station": {"ward": "001", "reg_no": "KA42001"},
+    "Ramanagara Rural Police Station": {"ward": "005", "reg_no": "KA42005"},
+    "Ijoor Police Station": {"ward": "002", "reg_no": "KA42002"},
+    "Channapatna Town Police Station": {"ward": "010", "reg_no": "KA42010"},
+    "Kanakapura Town Police Station": {"ward": "020", "reg_no": "KA42020"},
+    "Kanakapura Rural Police Station": {"ward": "021", "reg_no": "KA42021"},
+    "Magadi Police Station": {"ward": "030", "reg_no": "KA42030"},
+    "Bidadi Police Station": {"ward": "040", "reg_no": "KA42040"},
+    "Harohalli Police Station": {"ward": "050", "reg_no": "KA42050"},
+
+    # --- CHIKKABALLAPURA DISTRICT (KA40) ---
+    "Chikkaballapura Town Police Station": {"ward": "001", "reg_no": "KA40001"},
+    "Chikkaballapura Rural Police Station": {"ward": "005", "reg_no": "KA40005"},
+    "Chintamani Town Police Station": {"ward": "010", "reg_no": "KA40010"},
+    "Sidlaghatta Police Station": {"ward": "020", "reg_no": "KA40020"},
+    "Gauribidanur Town Police Station": {"ward": "030", "reg_no": "KA40030"},
+    "Bagepalli Police Station": {"ward": "040", "reg_no": "KA40040"},
+    "Gudibande Police Station": {"ward": "050", "reg_no": "KA40050"},
+    "Shidlaghatta Rural Police Station": {"ward": "021", "reg_no": "KA40021"},
+
+    # --- KODAGU DISTRICT (KA12) ---
+    "Madikeri Town Police Station": {"ward": "001", "reg_no": "KA12001"},
+    "Madikeri Rural Police Station": {"ward": "005", "reg_no": "KA12005"},
+    "Virajpet Town Police Station": {"ward": "010", "reg_no": "KA12010"},
+    "Somwarpet Police Station": {"ward": "020", "reg_no": "KA12020"},
+    "Kushalnagar Town Police Station": {"ward": "030", "reg_no": "KA12030"},
+    "Gonikoppa Police Station": {"ward": "040", "reg_no": "KA12040"},
+    "Ponnampet Police Station": {"ward": "050", "reg_no": "KA12050"},
+    "Siddapura Police Station": {"ward": "060", "reg_no": "KA12060"},
+
+    # --- DAKSHINA KANNADA DISTRICT (KA21) ---
+    "Puttur Town Police Station": {"ward": "001", "reg_no": "KA21001"},
+    "Puttur Rural Police Station": {"ward": "005", "reg_no": "KA21005"},
+    "Dakshina Kannada Puttur Police Station": {"ward": "006", "reg_no": "KA21006"},
+    "Bantwal Town Police Station": {"ward": "010", "reg_no": "KA21010"},
+    "Bantwal Rural Police Station": {"ward": "011", "reg_no": "KA21011"},
+    "Belthangady Police Station": {"ward": "020", "reg_no": "KA21020"},
+    "Sullia Police Station": {"ward": "030", "reg_no": "KA21030"},
+    "Subramanya Police Station": {"ward": "040", "reg_no": "KA21040"},
+    "Uppinangady Police Station": {"ward": "050", "reg_no": "KA21050"},
+    "Vittal Police Station": {"ward": "060", "reg_no": "KA21060"},
+    "Moodbidri Police Station": {"ward": "070", "reg_no": "KA21070"}
+}
+
+# Generate simple list for dropdowns
+STATION_NAMES = sorted(list(POLICE_DATABASE.keys()))
 
 # MongoDB Atlas Connection
 def get_mongodb_connection():
     mongodb_uri = app.config['MONGODB_URI']
-    
     print(f"🔗 Connecting to MongoDB Atlas...")
-    print(f"📡 URI: {mongodb_uri.split('@')[0]}@***")
-    
     try:
-        # For MongoDB Atlas with special characters in password
         client = MongoClient(mongodb_uri, retryWrites=True, w='majority')
-        
-        # Test connection
         client.admin.command('ismaster')
         print("✅ MongoDB Atlas connection successful!")
-        
-        # Get database name from URI
-        db_name = 'SwiftAid'  # Your database name
-        
-        print(f"📊 Using database: {db_name}")
+        db_name = 'SwiftAid'
         return client, db_name
-        
     except Exception as e:
         print(f"❌ MongoDB Atlas connection failed: {e}")
         raise e
@@ -95,77 +403,61 @@ def get_mongodb_connection():
 try:
     client, db_name = get_mongodb_connection()
     db = client[db_name]
-    print("✅ MongoDB database connection established!")
 except Exception as e:
     print(f"❌ Failed to connect to MongoDB: {e}")
-    print("💡 Please check your MongoDB Atlas connection string in .env file")
     exit(1)
 
 # Collections
-POLICE_users = db.POLICE_users  # Collection for police users (login credentials)
-incidents_collection = db.incidents  # Original collection (preserved)
-incidents_police_collection = db.incidents_police  # Collection for police operations
-police_officers_collection = db.police_officers  # Collection for police officers data
-assigned_cases_collection = db.ASSIGNED_CASES  # New collection for assigned cases
-police_stations_collection = db.police_stations  # Collection for police station registration info
+POLICE_users = db.POLICE_users
+incidents_collection = db.incidents
+incidents_police_collection = db.incidents_police
+police_officers_collection = db.police_officers
+assigned_cases_collection = db.ASSIGNED_CASES
+police_stations_collection = db.police_stations
 
-# FIXED: Improved index handling with proper error handling
-def fix_police_officers_index():
+# Indexes
+def init_indexes():
     try:
-        # Get all indexes first
-        indexes = list(police_officers_collection.list_indexes())
-        print("🔍 Checking existing indexes...")
-        
-        # Look for username index
-        username_index = None
-        for index in indexes:
-            if 'username' in index['key']:
-                username_index = index
-                break
-        
-        if username_index:
-            print(f"📝 Found username index: {username_index['name']}")
-            try:
-                # Drop the problematic unique index
-                police_officers_collection.drop_index(username_index['name'])
-                print(f"✅ Removed problematic unique index: {username_index['name']}")
-            except Exception as e:
-                print(f"ℹ️ Index removal note: {e}")
-        else:
-            print("ℹ️ No username index found to remove")
-            
+        incidents_police_collection.create_index([("created_at", -1)])
+        incidents_police_collection.create_index([("status", 1)])
+        incidents_collection.create_index([("created_at", -1)])
+        incidents_collection.create_index([("status", 1)])
+        assigned_cases_collection.create_index([("incident_id", 1)])
+        POLICE_users.create_index([("username", 1)])
+        police_officers_collection.create_index([("police_station", 1)])
+        print("✅ Database indexes created successfully!")
     except Exception as e:
-        print(f"ℹ️ Index check note: {e}")
+        print(f"⚠️ Index creation warning: {e}")
 
+init_indexes()
+
+# Fix existing data issues
 def fix_existing_null_usernames():
     try:
-        # Fix documents with null usernames
-        result = police_officers_collection.update_many(
-            {'username': None},
-            {'$set': {'username': ''}}
-        )
-        print(f"✅ Fixed {result.modified_count} documents with null usernames")
-        
-        # Fix documents without username field
-        result2 = police_officers_collection.update_many(
-            {'username': {'$exists': False}},
-            {'$set': {'username': ''}}
-        )
-        print(f"✅ Fixed {result2.modified_count} documents without username field")
-    except Exception as e:
-        print(f"ℹ️ Null username fix note: {e}")
+        police_officers_collection.update_many({'username': None}, {'$set': {'username': ''}})
+        police_officers_collection.update_many({'username': {'$exists': False}}, {'$set': {'username': ''}})
+    except Exception:
+        pass
 
-# Run fixes immediately
+def fix_police_officers_index():
+    try:
+        indexes = list(police_officers_collection.list_indexes())
+        username_index = next((index for index in indexes if 'username' in index['key']), None)
+        if username_index:
+            try:
+                police_officers_collection.drop_index(username_index['name'])
+            except Exception:
+                pass
+    except Exception:
+        pass
+
 fix_police_officers_index()
 fix_existing_null_usernames()
 
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'
-login_manager.login_message = 'Please log in to access this page.'
-login_manager.login_message_category = 'info'
 
-# User class for Flask-Login
 class User(UserMixin):
     def __init__(self, user_data):
         self.id = str(user_data['_id'])
@@ -173,10 +465,10 @@ class User(UserMixin):
         self.email = user_data['email']
         self.role = user_data.get('role', 'police')
         self.police_station = user_data.get('police_station', '')
-        self.police_station_reg_no = user_data.get('police_station_reg_no', '')  # Add this
+        self.police_station_reg_no = user_data.get('police_station_reg_no', '')
         self.full_name = user_data.get('full_name', '')
         self.designation = user_data.get('designation', 'Police Officer')
-        self.created_at = user_data.get('created_at', datetime.now(timezone.utc))
+        self.created_at = user_data.get('created_at', datetime.now(IST))
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -184,8 +476,8 @@ def load_user(user_id):
         user_data = POLICE_users.find_one({'_id': ObjectId(user_id)})
         if user_data:
             return User(user_data)
-    except Exception as e:
-        print(f"Error loading user: {e}")
+    except Exception:
+        pass
     return None
 
 def hash_password(password):
@@ -195,89 +487,60 @@ def check_password(hashed_password, password):
     return bcrypt.checkpw(password.encode('utf-8'), hashed_password.encode('utf-8'))
 
 def get_address_from_coordinates(lat, lng):
-    """Get address from coordinates using Nominatim (OpenStreetMap)"""
     try:
         url = f"https://nominatim.openstreetmap.org/reverse?format=json&lat={lat}&lon={lng}&zoom=18&addressdetails=1"
-        headers = {
-            'User-Agent': 'SwiftAid Police System/1.0 (contact@swiftaid.com)'
-        }
-        
-        response = requests.get(url, headers=headers, timeout=10)
+        headers = {'User-Agent': 'SwiftAid Police System/1.0'}
+        response = requests.get(url, headers=headers, timeout=5)
         if response.status_code == 200:
-            data = response.json()
-            address = data.get('display_name', 'Address not found')
-            return address
-        else:
-            return f"Location at {lat}, {lng}"
-    except Exception as e:
-        print(f"Error getting address: {e}")
+            return response.json().get('display_name', 'Address not found')
+        return f"Location at {lat}, {lng}"
+    except Exception:
         return f"Location at {lat}, {lng}"
 
+def convert_to_ist(dt):
+    if not dt: return datetime.now(IST)
+    if isinstance(dt, str):
+        try: dt = datetime.fromisoformat(dt.replace('Z', '+00:00'))
+        except: return datetime.now(IST)
+    if dt.tzinfo is None: dt = dt.replace(tzinfo=timezone.utc)
+    return dt.astimezone(IST)
+
 def process_public_incident(incident):
-    """Process public incident from mobile app to standard format"""
     incident_id = str(incident.get('_id'))
-    
-    # Get coordinates - handle different field names
     lat = incident.get('lat') or incident.get('latitude', 0)
     lng = incident.get('lng') or incident.get('longitude', 0)
-    
-    # Get user information
     user_name = incident.get('user_name', 'Unknown User')
-    user_email = incident.get('user_email', 'Unknown Email')
     
-    # Determine incident type based on available data
     incident_type = "Emergency Alert"
     if incident.get('metadata', {}).get('sos_type'):
         incident_type = f"SOS - {incident['metadata']['sos_type'].title()}"
     if incident.get('accel_mag', 0) > 1.5:
         incident_type = "Possible Accident"
     
-    # Determine severity
-    severity = "high"  # Default to high for public emergencies
-    if incident.get('speed', 0) > 0:
-        severity = "high"
-    elif incident.get('accel_mag', 0) > 1.0:
-        severity = "medium"
-    else:
-        severity = "low"
-    
-    # Get address from coordinates
+    severity = "high" if (incident.get('speed', 0) > 0) else ("medium" if incident.get('accel_mag', 0) > 1.0 else "low")
     address = get_address_from_coordinates(lat, lng)
-    
-    # Get timestamp
-    created_at = incident.get('timestamp') or incident.get('created_at', datetime.now(timezone.utc))
-    if isinstance(created_at, dict) and '$date' in created_at:
-        created_at = datetime.fromisoformat(created_at['$date'].replace('Z', '+00:00'))
-    
+    created_at = convert_to_ist(incident.get('timestamp') or incident.get('created_at'))
+
     return {
         '_id': incident_id,
         'incident_id': incident.get('incident_id', 'PUB-' + incident_id),
         'title': f"Emergency Alert from {user_name}",
-        'description': f"Emergency alert triggered by {user_name} ({user_email}). " +
-                      f"Location: {address}. " +
-                      f"Speed: {incident.get('speed', 0)} km/h, " +
-                      f"Acceleration: {incident.get('accel_mag', 0):.2f}",
+        'description': f"Emergency alert triggered by {user_name}.",
         'incident_type': incident_type,
         'severity': severity,
-        'status': 'active',  # Public incidents are always active initially
+        'status': 'active',
         'latitude': float(lat),
         'longitude': float(lng),
         'address': address,
         'reported_by': user_name,
-        'assigned_officer': incident.get('assigned_officer', 'Unassigned'), # FIXED: Read assigned_officer from document
+        'assigned_officer': incident.get('assigned_officer', 'Unassigned'),
         'created_at': created_at,
-        'source': 'public',
-        'original_data': {  # Keep original data for reference
-            'user_email': user_email,
-            'accel_mag': incident.get('accel_mag'),
-            'speed': incident.get('speed'),
-            'metadata': incident.get('metadata', {})
-        }
+        'source': 'public'
     }
+
 def process_police_incident(incident):
-    """Process police incident to standard format"""
     incident_id = str(incident.get('_id'))
-    
+    created_at = convert_to_ist(incident.get('created_at'))
     return {
         '_id': incident_id,
         'incident_id': incident.get('incident_id', 'POL-' + incident_id),
@@ -291,44 +554,28 @@ def process_police_incident(incident):
         'address': incident.get('address', 'Unknown location'),
         'reported_by': incident.get('reported_by', 'Unknown'),
         'assigned_officer': incident.get('assigned_officer', 'Unassigned'),
-        'created_at': incident.get('created_at', datetime.now(timezone.utc)),
+        'created_at': created_at,
         'source': 'police'
     }
 
 def assign_case_to_officer(incident_id, source, assigned_officer, incident_data):
-    """Assign case to officer and create record in ASSIGNED_CASES collection"""
     try:
-        print(f"🔍 DEBUG assign_case_to_officer called:")
-        print(f"   Incident ID: {incident_id}")
-        print(f"   Source: {source}")
-        print(f"   Assigned Officer: {assigned_officer}")
-        
-        # Update the incident data with the assigned officer
         incident_data['assigned_officer'] = assigned_officer
-        incident_data['updated_at'] = datetime.now(timezone.utc)
-        
-        # Create assigned case record
+        incident_data['updated_at'] = datetime.now(IST)
         assigned_case = {
             'incident_id': incident_id,
-            'source_collection': source,  # 'police' or 'public'
+            'source_collection': source,
             'assigned_officer': assigned_officer,
             'assigned_by': current_user.username,
-            'assigned_at': datetime.now(timezone.utc),
-            'incident_data': incident_data,  # Already updated with assigned officer
-            'status': 'assigned',  # assigned, in_progress, completed
-            'last_updated': datetime.now(timezone.utc)
+            'assigned_at': datetime.now(IST),
+            'incident_data': incident_data,
+            'status': 'assigned',
+            'last_updated': datetime.now(IST)
         }
-        
-        print(f"   Assigned Case Data: {assigned_case}")
-        
         result = assigned_cases_collection.insert_one(assigned_case)
-        
-        print(f"✅ Assigned case inserted with ID: {result.inserted_id}")
         return result.inserted_id
     except Exception as e:
-        print(f"❌ Error in assign_case_to_officer: {e}")
-        import traceback
-        traceback.print_exc()
+        print(f"Error assigning case: {e}")
         return None
 
 # Routes
@@ -336,2225 +583,438 @@ def assign_case_to_officer(incident_id, source, assigned_officer, incident_data)
 @login_required
 def dashboard():
     try:
-        # FIXED: Get recent incidents from BOTH collections (ALL statuses, not just active)
         recent_police_incidents = list(incidents_police_collection.find().sort('created_at', -1).limit(5))
         recent_public_incidents = list(incidents_collection.find().sort('created_at', -1).limit(5))
         
-        # Combine and sort recent incidents
         recent_incidents = []
-        
-        # Process police incidents
         for incident in recent_police_incidents:
             incident_data = process_police_incident(incident)
-            # Check assignment status
-            assignment = assigned_cases_collection.find_one({
-                'incident_id': str(incident['_id'])
-            })
+            assignment = assigned_cases_collection.find_one({'incident_id': str(incident['_id'])})
             incident_data['is_assigned'] = assignment is not None
             recent_incidents.append(incident_data)
         
-        # Process public incidents
         for incident in recent_public_incidents:
             incident_data = process_public_incident(incident)
-            # Check assignment status
-            assignment = assigned_cases_collection.find_one({
-                'incident_id': str(incident['_id'])
-            })
+            assignment = assigned_cases_collection.find_one({'incident_id': str(incident['_id'])})
             incident_data['is_assigned'] = assignment is not None
             recent_incidents.append(incident_data)
         
-        # Sort by creation date (newest first) and take top 5
         recent_incidents.sort(key=lambda x: x['created_at'], reverse=True)
         recent_incidents = recent_incidents[:5]
         
-        # CORRECTED: Get stats from police and public collections ONLY (exclude resolved_cases)
-        total_police_incidents = incidents_police_collection.count_documents({})
-        total_public_incidents = incidents_collection.count_documents({})
+        total_police = incidents_police_collection.count_documents({})
+        total_public = incidents_collection.count_documents({})
+        total_incidents = total_police + total_public
         
-        # Total incidents = police + public (EXCLUDING resolved_cases)
-        total_incidents = total_police_incidents + total_public_incidents
+        resolved_police = incidents_police_collection.count_documents({'status': 'resolved'})
+        resolved_public = incidents_collection.count_documents({'status': 'resolved'})
+        resolved_cases = db.resolved_cases.count_documents({})
+        total_resolved = resolved_police + resolved_public + resolved_cases
         
-        # Active incidents = only active status from police and public
-        active_police_incidents = incidents_police_collection.count_documents({'status': 'active'})
-        active_public_incidents = incidents_collection.count_documents({'status': 'active'})
-        active_incidents = active_police_incidents + active_public_incidents
+        user_incidents = (incidents_police_collection.count_documents({'assigned_officer': current_user.username}) + 
+                         incidents_collection.count_documents({'assigned_officer': current_user.username}))
         
-        # Resolved incidents = resolved from police + resolved from public + resolved_cases
-        resolved_police_incidents = incidents_police_collection.count_documents({'status': 'resolved'})
-        resolved_public_incidents = incidents_collection.count_documents({'status': 'resolved'})
-        resolved_from_cases = db.resolved_cases.count_documents({})
-        total_resolved_incidents = resolved_police_incidents + resolved_public_incidents + resolved_from_cases
-        
-        # Get incidents assigned to current user from police and public collections only
-        user_police_incidents = incidents_police_collection.count_documents({'assigned_officer': current_user.username})
-        user_public_incidents = incidents_collection.count_documents({'assigned_officer': current_user.username})
-        user_incidents = user_police_incidents + user_public_incidents
-        
-        # Get active officers count
         active_officers = police_officers_collection.count_documents({'status': 'active'})
-        
-        # Get assigned cases count
-        assigned_count = assigned_cases_collection.count_documents({})
-        unassigned_count = total_incidents - assigned_count
-        
-        print(f"🔍 DASHBOARD COUNTS:")
-        print(f"   Police Incidents: {total_police_incidents}")
-        print(f"   Public Incidents: {total_public_incidents}")
-        print(f"   Resolved Cases: {resolved_from_cases}")
-        print(f"   TOTAL (Police+Public): {total_incidents}")
-        print(f"   Active: {active_incidents}")
-        print(f"   Resolved (All): {total_resolved_incidents}")
-        print(f"   User Assigned: {user_incidents}")
-        print(f"   Assigned Cases: {assigned_count}")
-        print(f"   Unassigned Cases: {unassigned_count}")
-        print(f"   Recent Incidents Found: {len(recent_incidents)}")
         
         return render_template('dashboard.html', 
                              incidents=recent_incidents,
                              total_incidents=total_incidents,
-                             active_incidents=active_incidents,
-                             resolved_incidents=total_resolved_incidents,
+                             resolved_incidents=total_resolved,
                              user_incidents=user_incidents,
-                             active_officers=active_officers,
-                             assigned_count=assigned_count,
-                             unassigned_count=unassigned_count)
+                             active_officers=active_officers)
     except Exception as e:
-        print(f"Dashboard error: {e}")
-        import traceback
-        traceback.print_exc()
-        # Return safe defaults if there's an error
-        return render_template('dashboard.html', 
-                             incidents=[],
-                             total_incidents=0,
-                             active_incidents=0,
-                             resolved_incidents=0,
-                             user_incidents=0,
-                             active_officers=0,
-                             assigned_count=0,
-                             unassigned_count=0)
-    
-@app.route('/api/reverse-geocode')
-@login_required
-def reverse_geocode():
-    """API endpoint to get address from coordinates"""
-    try:
-        lat = request.args.get('lat')
-        lng = request.args.get('lng')
-        
-        if not lat or not lng:
-            return jsonify({'error': 'Latitude and longitude are required'}), 400
-        
-        address = get_address_from_coordinates(float(lat), float(lng))
-        return jsonify({'address': address})
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        return render_template('dashboard.html', incidents=[], total_incidents=0, resolved_incidents=0, user_incidents=0, active_officers=0)
 
-# In the register route, update the duplicate check section:
+@app.route('/api/get-station-data')
+def get_station_data():
+    """API to get validation data for a specific station"""
+    station_name = request.args.get('station')
+    if station_name in POLICE_DATABASE:
+        return jsonify(POLICE_DATABASE[station_name])
+    return jsonify({'error': 'Station not found'}), 404
+
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
-        # Get form data
         password = request.form.get('password')
         confirm_password = request.form.get('confirm_password')
         police_station = request.form.get('police_station')
         ward_number = request.form.get('ward_number')
-        police_station_reg_no = request.form.get('police_station_reg_no')  # 6-digit registration number
+        police_station_reg_no = request.form.get('police_station_reg_no')
         
-        # Validation
         if not all([password, confirm_password, police_station, ward_number, police_station_reg_no]):
             flash('All fields are required', 'danger')
-            return render_template('register.html', police_stations=KARNATAKA_POLICE_STATIONS)
+            return render_template('register.html', police_stations=STATION_NAMES)
         
-        # Validate 6-digit registration number
-        if not re.match(r'^\d{6}$', police_station_reg_no):
-            flash('Police Station Registration Number must be exactly 6 digits', 'danger')
-            return render_template('register.html', police_stations=KARNATAKA_POLICE_STATIONS)
+        # Strict Validation using POLICE_DATABASE
+        if police_station not in POLICE_DATABASE:
+            flash('Invalid Police Station selected. Please select from the authentic list.', 'danger')
+            return render_template('register.html', police_stations=STATION_NAMES)
+            
+        real_data = POLICE_DATABASE[police_station]
         
-        # Check if registration number already exists
+        if real_data['ward'] != ward_number:
+            flash(f"Security Alert: Ward Number '{ward_number}' does not match official records for {police_station}. Expected: {real_data['ward']}", 'danger')
+            return render_template('register.html', police_stations=STATION_NAMES)
+            
+        if real_data['reg_no'] != police_station_reg_no:
+            flash(f"Security Alert: Registration Number '{police_station_reg_no}' does not match official records for {police_station}. Expected: {real_data['reg_no']}", 'danger')
+            return render_template('register.html', police_stations=STATION_NAMES)
+
         if POLICE_users.find_one({'police_station_reg_no': police_station_reg_no}):
-            flash('This Police Station Registration Number is already registered', 'danger')
-            return render_template('register.html', police_stations=KARNATAKA_POLICE_STATIONS)
-        
-        # Check if police station with same ward number is already registered
-        existing_station = POLICE_users.find_one({
-            'police_station': police_station,
-            'ward_number': ward_number
-        })
-        
-        if existing_station:
-            flash(f'{police_station} (Ward: {ward_number}) is already registered. Please login instead.', 'danger')
-            return render_template('register.html', police_stations=KARNATAKA_POLICE_STATIONS)
-        
-        # Also check if same police station exists with different ward number
-        same_station_diff_ward = POLICE_users.find_one({'police_station': police_station})
-        if same_station_diff_ward:
-            existing_ward = same_station_diff_ward.get('ward_number', 'Not specified')
-            flash(f'{police_station} is already registered with Ward: {existing_ward}. Each police station can only register once.', 'danger')
-            return render_template('register.html', police_stations=KARNATAKA_POLICE_STATIONS)
+            flash('This Police Station is already registered.', 'danger')
+            return render_template('register.html', police_stations=STATION_NAMES)
         
         if password != confirm_password:
             flash('Passwords do not match', 'danger')
-            return render_template('register.html', police_stations=KARNATAKA_POLICE_STATIONS)
-        
-        # Enhanced password validation
-        password_regex = r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$'
-        if not re.match(password_regex, password):
-            flash('Password must contain at least 8 characters including uppercase, lowercase, number, and special character', 'danger')
-            return render_template('register.html', police_stations=KARNATAKA_POLICE_STATIONS)
+            return render_template('register.html', police_stations=STATION_NAMES)
         
         try:
-            # Generate username from police station name and registration number
             base_username = re.sub(r'[^a-zA-Z0-9]', '', police_station).lower()[:15]
             reg_suffix = police_station_reg_no[-4:]
             username = f"{base_username}_{reg_suffix}"
             
-            # Check if username already exists, append number if needed
             counter = 1
             original_username = username
             while POLICE_users.find_one({'username': username}):
                 username = f"{original_username}_{counter}"
                 counter += 1
-                if counter > 100:  # Safety limit
-                    flash('Too many similar police station registrations', 'danger')
-                    return render_template('register.html', police_stations=KARNATAKA_POLICE_STATIONS)
             
-            # Generate email from police station
             email = f"{username}@karnatakapolice.gov.in"
             
-            # Generate full name from police station
-            full_name = police_station
-            
-            # Create new user with new fields
             new_user = {
                 'username': username,
                 'email': email,
                 'password_hash': hash_password(password),
                 'police_station': police_station,
-                'police_station_reg_no': police_station_reg_no,  # Store registration number
+                'police_station_reg_no': police_station_reg_no,
                 'ward_number': ward_number,
-                'full_name': full_name,
+                'full_name': police_station,
                 'designation': 'Police Station Admin',
                 'role': 'police_admin',
                 'status': 'active',
-                'created_at': datetime.now(timezone.utc),
+                'created_at': datetime.now(IST),
                 'last_login': None
             }
+            res = POLICE_users.insert_one(new_user)
             
-            result = POLICE_users.insert_one(new_user)
-            
-            # Also add to police_officers collection
             officer_data = {
-                'user_id': result.inserted_id,
+                'user_id': res.inserted_id,
                 'username': username,
                 'email': email,
                 'police_station': police_station,
                 'police_station_reg_no': police_station_reg_no,
                 'ward_number': ward_number,
-                'full_name': full_name,
+                'full_name': police_station,
                 'designation': 'Police Station Admin',
                 'status': 'active',
-                'created_at': datetime.now(timezone.utc)
+                'created_at': datetime.now(IST)
             }
-            
             police_officers_collection.insert_one(officer_data)
             
-            # Auto-login after registration
             user = User(new_user)
             login_user(user)
-            flash(f'Registration successful! Welcome {police_station} (Ward: {ward_number})! Your username is: {username}', 'success')
+            flash(f'Registration successful! Welcome {police_station}!', 'success')
             return redirect(url_for('dashboard'))
-            
         except Exception as e:
-            flash(f'Registration error: {str(e)}', 'danger')
-    
-    return render_template('register.html', police_stations=KARNATAKA_POLICE_STATIONS)
-
-@app.route('/api/check-station-availability', methods=['POST'])
-def check_station_availability():
-    """API endpoint to check if police station is available for registration"""
-    try:
-        data = request.get_json()
-        police_station = data.get('police_station')
-        ward_number = data.get('ward_number')
-        
-        if not police_station:
-            return jsonify({'error': 'Police station name is required'}), 400
-        
-        # Check if police station is already registered
-        existing_station = POLICE_users.find_one({'police_station': police_station})
-        
-        if existing_station:
-            existing_ward = existing_station.get('ward_number', 'Not specified')
-            return jsonify({
-                'available': False,
-                'message': f'{police_station} is already registered with Ward: {existing_ward}.',
-                'existing_ward': existing_ward
-            })
-        
-        return jsonify({
-            'available': True,
-            'message': f'{police_station} is available for registration.'
-        })
-        
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
+            flash(f'Registration error: {e}', 'danger')
+            
+    return render_template('register.html', police_stations=STATION_NAMES)
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if current_user.is_authenticated:
         return redirect(url_for('dashboard'))
-        
     if request.method == 'POST':
         police_station = request.form.get('police_station')
-        police_station_reg_no = request.form.get('police_station_reg_no')
+        reg_no = request.form.get('police_station_reg_no')
         password = request.form.get('password')
         
-        try:
-            # Find user by police station and registration number
-            user_data = POLICE_users.find_one({
-                'police_station': police_station,
-                'police_station_reg_no': police_station_reg_no
-            })
-            
-            if user_data and check_password(user_data['password_hash'], password):
-                user = User(user_data)
-                login_user(user)
-                
-                # Update last login
-                POLICE_users.update_one(
-                    {'_id': ObjectId(user.id)},
-                    {'$set': {'last_login': datetime.now(timezone.utc)}}
-                )
-                
-                flash(f'Welcome back to {police_station}!', 'success')
-                next_page = request.args.get('next')
-                return redirect(next_page) if next_page else redirect(url_for('dashboard'))
-            else:
-                flash('Invalid police station, registration number, or password', 'danger')
-        except Exception as e:
-            flash(f'Login error: {str(e)}', 'danger')
+        user_data = POLICE_users.find_one({'police_station': police_station, 'police_station_reg_no': reg_no})
+        if user_data and check_password(user_data['password_hash'], password):
+            user = User(user_data)
+            login_user(user)
+            POLICE_users.update_one({'_id': user_data['_id']}, {'$set': {'last_login': datetime.now(IST)}})
+            return redirect(url_for('dashboard'))
+        flash('Invalid credentials', 'danger')
     
-    # Get registered police stations for dropdown
-    registered_stations = POLICE_users.distinct('police_station')
-    return render_template('login.html', registered_stations=registered_stations)
+    return render_template('login.html', registered_stations=STATION_NAMES)
 
 @app.route('/logout')
 @login_required
 def logout():
     logout_user()
-    flash('You have been logged out successfully', 'success')
     return redirect(url_for('login'))
 
 @app.route('/incidents')
 @login_required
 def incidents():
-    """Display all incidents page - from BOTH incidents and incidents_police collections"""
-    try:
-        print("🔄 Loading incidents from BOTH collections...")
-        
-        # Get incidents from BOTH collections
-        police_incidents = list(incidents_police_collection.find().sort('created_at', -1))
-        public_incidents = list(incidents_collection.find().sort('created_at', -1))
-        
-        print(f"📊 Found {len(police_incidents)} police incidents and {len(public_incidents)} public incidents")
-        
-        # Process both collections
-        all_incidents = []
-        
-        # Process police incidents
-        for incident in police_incidents:
-            incident_data = process_police_incident(incident)
-            # Check assignment status
-            assignment = assigned_cases_collection.find_one({
-                'incident_id': str(incident['_id'])
-            })
-            incident_data['is_assigned'] = assignment is not None
-            incident_data['assignment_data'] = assignment
-            all_incidents.append(incident_data)
-        
-        # Process public incidents
-        for incident in public_incidents:
-            incident_data = process_public_incident(incident)
-            # Check assignment status
-            assignment = assigned_cases_collection.find_one({
-                'incident_id': str(incident['_id'])
-            })
-            incident_data['is_assigned'] = assignment is not None
-            incident_data['assignment_data'] = assignment
-            all_incidents.append(incident_data)
-        
-        # Sort all incidents by creation date (newest first)
-        all_incidents.sort(key=lambda x: x['created_at'], reverse=True)
-        
-        # Calculate statistics
-        total_incidents = len(all_incidents)
-        police_count = len([inc for inc in all_incidents if inc['source'] == 'police'])
-        public_count = len([inc for inc in all_incidents if inc['source'] == 'public'])
-        high_severity_count = len([inc for inc in all_incidents if inc['severity'] == 'high'])
-        active_count = len([inc for inc in all_incidents if inc['status'] == 'active'])
-        resolved_count = len([inc for inc in all_incidents if inc['status'] == 'resolved'])
-        assigned_count = len([inc for inc in all_incidents if inc['is_assigned']])
-        unassigned_count = total_incidents - assigned_count
-        
-        # Get officers for assignment dropdown
-        active_officers = list(police_officers_collection.find({'status': 'active'}))
-        
-        print(f"✅ Sending {total_incidents} total incidents to template ({police_count} police, {public_count} public)")
-        print(f"📋 Assignment stats: {assigned_count} assigned, {unassigned_count} unassigned")
-        
-        return render_template('incidents.html', 
-                             all_incidents=all_incidents,
-                             total_incidents=total_incidents,
-                             police_count=police_count,
-                             public_count=public_count,
-                             high_severity_count=high_severity_count,
-                             active_count=active_count,
-                             resolved_count=resolved_count,
-                             assigned_count=assigned_count,
-                             unassigned_count=unassigned_count,
-                             officers=active_officers)
-        
-    except Exception as e:
-        print(f"❌ Error in incidents route: {e}")
-        import traceback
-        traceback.print_exc()
-        return render_template('incidents.html', 
-                             all_incidents=[],
-                             total_incidents=0,
-                             police_count=0,
-                             public_count=0,
-                             high_severity_count=0,
-                             active_count=0,
-                             resolved_count=0,
-                             assigned_count=0,
-                             unassigned_count=0,
-                             officers=[])
+    police_incidents = list(incidents_police_collection.find().sort('created_at', -1))
+    public_incidents = list(incidents_collection.find().sort('created_at', -1))
+    
+    all_incidents = []
+    for i in police_incidents:
+        d = process_police_incident(i)
+        d['is_assigned'] = assigned_cases_collection.find_one({'incident_id': str(i['_id'])}) is not None
+        all_incidents.append(d)
+    for i in public_incidents:
+        d = process_public_incident(i)
+        d['is_assigned'] = assigned_cases_collection.find_one({'incident_id': str(i['_id'])}) is not None
+        all_incidents.append(d)
+    
+    all_incidents.sort(key=lambda x: x['created_at'], reverse=True)
+    
+    stats = {
+        'total': len(all_incidents),
+        'police': sum(1 for i in all_incidents if i['source'] == 'police'),
+        'public': sum(1 for i in all_incidents if i['source'] == 'public'),
+        'high_severity': sum(1 for i in all_incidents if i['severity'] == 'high'),
+        'active': sum(1 for i in all_incidents if i['status'] == 'active'),
+        'resolved': sum(1 for i in all_incidents if i['status'] == 'resolved'),
+        'assigned': sum(1 for i in all_incidents if i['is_assigned']),
+        'unassigned': len(all_incidents) - sum(1 for i in all_incidents if i['is_assigned'])
+    }
+    
+    officers = list(police_officers_collection.find({'status': 'active'}))
+    return render_template('incidents.html', all_incidents=all_incidents, officers=officers, **stats)
 
-@app.route('/api/incidents')
+@app.route('/api/incidents', methods=['GET', 'POST'])
 @login_required
-def api_incidents():
-    """API endpoint to get incidents data from BOTH collections"""
-    try:
-        # Get incidents from BOTH collections
-        police_incidents = list(incidents_police_collection.find())
-        public_incidents = list(incidents_collection.find())
-        
-        incidents_data = []
-        
-        # Process police incidents
-        for incident in police_incidents:
-            incident_data = process_police_incident(incident)
-            # Check assignment status
-            assignment = assigned_cases_collection.find_one({
-                'incident_id': str(incident['_id'])
-            })
-            
-            # Create serializable response
-            response_item = {
-                'id': str(incident_data['_id']),  # Convert ObjectId to string
-                'incident_id': incident_data['incident_id'],
-                'title': incident_data['title'],
-                'description': incident_data['description'],
-                'type': incident_data['incident_type'],
-                'severity': incident_data['severity'],
-                'status': incident_data['status'],
-                'lat': incident_data['latitude'],
-                'lng': incident_data['longitude'],
-                'address': incident_data['address'],
-                'reported_by': incident_data['reported_by'],
-                'assigned_officer': incident_data['assigned_officer'],
-                'source': 'police',
-                'is_assigned': assignment is not None
-            }
-            
-            # Handle datetime serialization
-            if 'created_at' in incident_data:
-                if isinstance(incident_data['created_at'], datetime):
-                    response_item['created_at'] = incident_data['created_at'].isoformat()
-                else:
-                    response_item['created_at'] = str(incident_data['created_at'])
-            
-            incidents_data.append(response_item)
-        
-        # Process public incidents
-        for incident in public_incidents:
-            incident_data = process_public_incident(incident)
-            # Check assignment status
-            assignment = assigned_cases_collection.find_one({
-                'incident_id': str(incident['_id'])
-            })
-            
-            response_item = {
-                'id': str(incident_data['_id']),  # Convert ObjectId to string
-                'incident_id': incident_data['incident_id'],
-                'title': incident_data['title'],
-                'description': incident_data['description'],
-                'type': incident_data['incident_type'],
-                'severity': incident_data['severity'],
-                'status': incident_data['status'],
-                'lat': incident_data['latitude'],
-                'lng': incident_data['longitude'],
-                'address': incident_data['address'],
-                'reported_by': incident_data['reported_by'],
-                'assigned_officer': incident_data['assigned_officer'],
-                'source': 'public',
-                'is_assigned': assignment is not None
-            }
-            
-            # Handle datetime serialization
-            if 'created_at' in incident_data:
-                if isinstance(incident_data['created_at'], datetime):
-                    response_item['created_at'] = incident_data['created_at'].isoformat()
-                else:
-                    response_item['created_at'] = str(incident_data['created_at'])
-            
-            incidents_data.append(response_item)
-        
-        return jsonify(incidents_data)
-    except Exception as e:
-        print(f"Error in api_incidents: {e}")
-        import traceback
-        traceback.print_exc()
-        return jsonify({'error': str(e)}), 500
-# Add new incident
-@app.route('/api/incidents', methods=['POST'])
-@login_required
-def add_incident():
-    """API endpoint to add new incident"""
-    try:
+def api_incidents_route():
+    if request.method == 'POST':
         data = request.get_json()
-        
-        # Validate required fields
-        if not data.get('title') or not data.get('description'):
-            return jsonify({'error': 'Title and description are required'}), 400
-        
-        # Get address from coordinates if not provided
         address = data.get('address')
-        if not address and data.get('latitude') and data.get('longitude'):
+        if not address and data.get('latitude'):
             address = get_address_from_coordinates(data.get('latitude'), data.get('longitude'))
-        
+            
         new_incident = {
-            'incident_id': f'POL-{datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")}',
+            'incident_id': f'POL-{datetime.now(IST).strftime("%Y%m%d-%H%M%S")}',
             'title': data.get('title'),
             'description': data.get('description'),
             'incident_type': data.get('incident_type', 'Other'),
             'severity': data.get('severity', 'medium'),
-            'status': data.get('status', 'active'),
+            'status': 'active',
             'latitude': float(data.get('latitude', 14.4664)),
             'longitude': float(data.get('longitude', 75.9238)),
-            'address': address or 'Unknown Location',
+            'address': address or 'Unknown',
             'reported_by': current_user.username,
-            'assigned_officer': data.get('assigned_officer', current_user.username),
-            'created_at': datetime.now(timezone.utc),
-            'updated_at': datetime.now(timezone.utc),
-            'location_details': data.get('location_details', {})
+            'assigned_officer': data.get('assigned_officer', 'Unassigned'),
+            'created_at': datetime.now(IST),
+            'source': 'police'
         }
-        
-        result = incidents_police_collection.insert_one(new_incident)
-        
-        return jsonify({
-            'message': 'Incident added successfully',
-            'incident_id': new_incident['incident_id'],
-            'id': str(result.inserted_id)
-        })
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        res = incidents_police_collection.insert_one(new_incident)
+        return jsonify({'message': 'Added', 'id': str(res.inserted_id)})
+    
+    police = list(incidents_police_collection.find().limit(50))
+    public = list(incidents_collection.find().limit(50))
+    data = []
+    for i in police:
+        d = process_police_incident(i)
+        d['is_assigned'] = assigned_cases_collection.find_one({'incident_id': str(i['_id'])}) is not None
+        d['id'] = str(d['_id'])
+        d['created_at'] = d['created_at'].isoformat()
+        data.append(d)
+    for i in public:
+        d = process_public_incident(i)
+        d['is_assigned'] = assigned_cases_collection.find_one({'incident_id': str(i['_id'])}) is not None
+        d['id'] = str(d['_id'])
+        d['created_at'] = d['created_at'].isoformat()
+        data.append(d)
+    return jsonify(data)
 
-# Update incident
-# Get incident details - FIXED VERSION
-@app.route('/api/incidents/<incident_id>/details')
+@app.route('/api/recent-activity')
 @login_required
-def get_incident_details(incident_id):
-    """API endpoint to get detailed incident information - SIMPLE FIX"""
-    try:
-        source = request.args.get('source', 'police')
-        
-        incident_data = None
-        assignment = None
-        
-        if source == 'police':
-            incident = incidents_police_collection.find_one({'_id': ObjectId(incident_id)})
-            if incident:
-                incident_data = process_police_incident(incident)
-        else:
-            incident = incidents_collection.find_one({'_id': ObjectId(incident_id)})
-            if incident:
-                incident_data = process_public_incident(incident)
-        
-        if not incident_data:
-            return jsonify({'error': 'Incident not found'}), 404
-        
-        # Check assignment status
-        assignment = assigned_cases_collection.find_one({
-            'incident_id': incident_id
-        })
-        
-        # MANUALLY CREATE A JSON-SERIALIZABLE RESPONSE
-        response_data = {
-            'id': str(incident_data.get('_id', '')),  # Convert to string
-            'incident_id': incident_data.get('incident_id', ''),
-            'title': incident_data.get('title', ''),
-            'description': incident_data.get('description', ''),
-            'incident_type': incident_data.get('incident_type', ''),
-            'severity': incident_data.get('severity', ''),
-            'status': incident_data.get('status', ''),
-            'latitude': float(incident_data.get('latitude', 0)),
-            'longitude': float(incident_data.get('longitude', 0)),
-            'address': incident_data.get('address', ''),
-            'reported_by': incident_data.get('reported_by', ''),
-            'assigned_officer': incident_data.get('assigned_officer', ''),
-            'source': source,
-            'is_assigned': assignment is not None
-        }
-        
-        # Handle datetime serialization
-        created_at = incident_data.get('created_at')
-        if created_at:
-            if isinstance(created_at, datetime):
-                response_data['created_at'] = created_at.isoformat()
-            else:
-                response_data['created_at'] = str(created_at)
-        else:
-            response_data['created_at'] = ''
-        
-        updated_at = incident_data.get('updated_at')
-        if updated_at:
-            if isinstance(updated_at, datetime):
-                response_data['updated_at'] = updated_at.isoformat()
-            else:
-                response_data['updated_at'] = str(updated_at)
-        else:
-            response_data['updated_at'] = response_data['created_at']
-        
-        # Add assignment data if exists
-        if assignment:
-            response_data['assignment_data'] = {
-                'assigned_officer': assignment.get('assigned_officer', ''),
-                'assigned_by': assignment.get('assigned_by', ''),
-                'assigned_at': assignment.get('assigned_at', '').isoformat() if isinstance(assignment.get('assigned_at'), datetime) else str(assignment.get('assigned_at', '')),
-                'status': assignment.get('status', '')
-            }
-        
-        print(f"✅ Sending incident details: {incident_data.get('title')}")
-        return jsonify(response_data)
-        
-    except Exception as e:
-        print(f"❌ Error in get_incident_details: {e}")
-        import traceback
-        traceback.print_exc()
-        return jsonify({'error': str(e)}), 500
+def recent_activity():
+    activities = []
+    recs = list(incidents_police_collection.find().sort('created_at', -1).limit(2))
+    for r in recs:
+        t = convert_to_ist(r.get('created_at'))
+        activities.append({'text': f"New Police Incident: {r.get('title')}", 'time': t.strftime('%H:%M'), 'color': 'primary', 'icon': 'fa-exclamation-circle'})
+    return jsonify({'activities': activities})
 
-@app.route('/api/assigned-cases')
+@app.route('/api/police-officers', methods=['GET', 'POST'])
 @login_required
-def get_assigned_cases():
-    """API endpoint to get all assigned cases from ASSIGNED_CASES collection"""
-    try:
-        # Get all assigned cases
-        assigned_cases = list(assigned_cases_collection.find().sort('assigned_at', -1))
-        
-        cases_data = []
-        
-        for case in assigned_cases:
-            # Get incident data from the appropriate collection
-            incident_id = case.get('incident_id')
-            source = case.get('source_collection', 'police')
-            
-            incident_data = None
-            
-            if source == 'police':
-                incident = incidents_police_collection.find_one({'_id': ObjectId(incident_id)})
-                if incident:
-                    incident_data = process_police_incident(incident)
-            else:
-                incident = incidents_collection.find_one({'_id': ObjectId(incident_id)})
-                if incident:
-                    incident_data = process_public_incident(incident)
-            
-            if incident_data:
-                # Create a JSON-serializable response
-                case_response = {
-                    'assignment_data': {
-                        'assigned_officer': case.get('assigned_officer'),
-                        'assigned_by': case.get('assigned_by'),
-                        'assigned_at': case.get('assigned_at').isoformat() if isinstance(case.get('assigned_at'), datetime) else str(case.get('assigned_at')),
-                        'status': case.get('status', 'assigned')
-                    },
-                    'incident_data': {
-                        '_id': str(incident_data.get('_id', '')),
-                        'id': str(incident_data.get('_id', '')),
-                        'incident_id': incident_data.get('incident_id', ''),
-                        'title': incident_data.get('title', ''),
-                        'description': incident_data.get('description', ''),
-                        'incident_type': incident_data.get('incident_type', ''),
-                        'severity': incident_data.get('severity', ''),
-                        'status': incident_data.get('status', ''),
-                        'latitude': float(incident_data.get('latitude', 0)),
-                        'longitude': float(incident_data.get('longitude', 0)),
-                        'address': incident_data.get('address', ''),
-                        'reported_by': incident_data.get('reported_by', ''),
-                        'assigned_officer': incident_data.get('assigned_officer', ''),
-                        'source': source,
-                        'created_at': incident_data.get('created_at').isoformat() if isinstance(incident_data.get('created_at'), datetime) else str(incident_data.get('created_at'))
-                    }
-                }
-                
-                cases_data.append(case_response)
-        
-        print(f"✅ Returning {len(cases_data)} assigned cases")
-        return jsonify(cases_data)
-        
-    except Exception as e:
-        print(f"❌ Error in get_assigned_cases: {e}")
-        import traceback
-        traceback.print_exc()
-        return jsonify({'error': str(e)}), 500
-# NEW: Assign officer to incident
-@app.route('/api/incidents/<incident_id>/assign-officer', methods=['PUT'])
-@login_required
-def assign_officer_to_incident(incident_id):
-    """API endpoint to assign officer to incident - FIXED VERSION"""
-    try:
-        print(f"🔍 ASSIGNMENT REQUEST for incident: {incident_id}")
+def police_officers_route():
+    if request.method == 'POST':
         data = request.get_json()
-        source = data.get('source', 'police')
-        assigned_officer = data.get('assigned_officer')
+        station = current_user.police_station
         
-        print(f"   Request data: {data}")
-        print(f"   Source: {source}")
-        print(f"   Assigned Officer: {assigned_officer}")
-        
-        if not assigned_officer:
-            print("❌ No officer specified")
-            return jsonify({'error': 'Officer username is required'}), 400
-        
-        # Determine which collection to update based on source
-        if source == 'police':
-            collection = incidents_police_collection
-            print("   Using police collection")
-        else:
-            collection = incidents_collection
-            print("   Using public collection")
-        
-        # Get the incident data first
-        try:
-            incident = collection.find_one({'_id': ObjectId(incident_id)})
-            if not incident:
-                print(f"❌ Incident not found: {incident_id}")
-                return jsonify({'message': 'Incident not found'}), 404
-            print(f"✅ Found incident: {incident.get('title', 'No title')}")
-        except Exception as e:
-            print(f"❌ Error finding incident: {e}")
-            return jsonify({'error': f'Invalid incident ID: {str(e)}'}), 400
-        
-        # Process incident data for storage
-        if source == 'police':
-            processed_incident = process_police_incident(incident)
-        else:
-            processed_incident = process_public_incident(incident)
-        
-        print(f"   Processed incident keys: {list(processed_incident.keys())}")
-        
-        # Check if case is already assigned
-        existing_assignment = assigned_cases_collection.find_one({
-            'incident_id': incident_id
-        })
-        
-        if existing_assignment:
-            print(f"⚠️ Incident already assigned to: {existing_assignment.get('assigned_officer')}")
-            # Still update the assignment
-            assigned_cases_collection.update_one(
-                {'_id': existing_assignment['_id']},
-                {'$set': {
-                    'assigned_officer': assigned_officer,
-                    'assigned_by': current_user.username,
-                    'assigned_at': datetime.now(timezone.utc),
-                    'last_updated': datetime.now(timezone.utc)
-                }}
-            )
-            print(f"✅ Updated existing assignment")
-            assignment_id = existing_assignment['_id']
-        else:
-            # Assign case to officer in the new collection
-            assignment_id = assign_case_to_officer(
-                incident_id, 
-                source, 
-                assigned_officer, 
-                processed_incident
-            )
+        uname = data.get('username')
+        if not uname:
+            uname = f"{data.get('full_name','').lower().replace(' ','.')}.{data.get('badge_number','')[-4:]}"
             
-            if not assignment_id:
-                print("❌ assign_case_to_officer returned None")
-                return jsonify({'error': 'Failed to assign case in database'}), 500
-        
-        print(f"✅ Case assigned with ID: {assignment_id}")
-        
-        # CRITICAL FIX: Update the original incident with assigned officer
-        try:
-            result = collection.update_one(
-                {'_id': ObjectId(incident_id)},
-                {'$set': {
-                    'assigned_officer': assigned_officer,
-                    'updated_at': datetime.now(timezone.utc)
-                }}
-            )
+        if police_officers_collection.find_one({'$or': [{'badge_number': data.get('badge_number')}, {'username': uname}]}):
+            return jsonify({'error': 'Exists'}), 400
             
-            print(f"✅ Original incident updated: {result.modified_count} document(s) modified")
-            
-            if result.modified_count > 0:
-                # Also update the processed incident data
-                processed_incident['assigned_officer'] = assigned_officer
-                processed_incident['updated_at'] = datetime.now(timezone.utc)
-                
-                # Update the assignment record with updated incident data
-                assigned_cases_collection.update_one(
-                    {'_id': assignment_id},
-                    {'$set': {
-                        'incident_data': processed_incident,
-                        'last_updated': datetime.now(timezone.utc)
-                    }}
-                )
-                
-                return jsonify({
-                    'message': 'Officer assigned successfully!',
-                    'assignment_id': str(assignment_id),
-                    'assigned_officer': assigned_officer,
-                    'updated_original': True
-                })
-            else:
-                print(f"⚠️ No documents modified in original collection")
-                # Still return success if assignment was created
-                return jsonify({
-                    'message': 'Officer assigned (original incident not updated)',
-                    'assignment_id': str(assignment_id),
-                    'assigned_officer': assigned_officer,
-                    'updated_original': False
-                })
-        except Exception as e:
-            print(f"⚠️ Error updating original incident: {e}")
-            # Still return success if assignment was created
-            return jsonify({
-                'message': 'Officer assigned (with note about original incident)',
-                'assignment_id': str(assignment_id),
-                'assigned_officer': assigned_officer,
-                'warning': 'Could not update original incident',
-                'error_details': str(e)
-            })
-    except Exception as e:
-        print(f"❌ Unhandled error in assign_officer_to_incident: {e}")
-        import traceback
-        traceback.print_exc()
-        return jsonify({'error': str(e)}), 500
-
-
-# Get police officers - FILTERED by current user's police station
-@app.route('/api/police-officers')
-@login_required
-def get_police_officers():
-    """API endpoint to get police officers - FILTERED by current user's police station"""
-    try:
-        # Get officers from the same police station as current user
-        officers = list(police_officers_collection.find({
-            'police_station': current_user.police_station,
-            'status': 'active'
-        }))
-        
-        officers_data = []
-        for officer in officers:
-            officers_data.append({
-                '_id': str(officer['_id']),  # Add ID for reference
-                'username': officer.get('username', ''),
-                'full_name': officer.get('full_name', ''),
-                'badge_number': officer.get('badge_number', ''),
-                'designation': officer.get('designation', 'Police Officer'),
-                'email': officer.get('email', ''),
-                'phone': officer.get('phone', ''),
-                'police_station': officer.get('police_station', ''),
-                'rank': officer.get('designation', 'Police Officer')  # For compatibility
-            })
-        
-        print(f"🔍 Returning {len(officers_data)} officers from station: {current_user.police_station}")
-        return jsonify(officers_data)
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
-# Add police officer (from dashboard) - UPDATED VERSION
-
-@app.route('/api/police-officers', methods=['POST'])
-@login_required
-def add_police_officer():
-    """API endpoint to add new police officer"""
-    try:
-        data = request.get_json()
-        
-        # Validate required fields
-        required_fields = ['badge_number', 'full_name', 'designation', 'email']
-        for field in required_fields:
-            if not data.get(field):
-                return jsonify({'error': f'{field.replace("_", " ").title()} is required'}), 400
-        
-        # Use current user's police station (not from form)
-        police_station = current_user.police_station
-        
-        # Generate a username if not provided
-        username = data.get('username')
-        if not username:
-            # Create username from full name and badge number
-            base_username = data.get('full_name', '').lower().replace(' ', '.')
-            badge_suffix = data.get('badge_number', '')[-4:]
-            username = f"{base_username}.{badge_suffix}" if badge_suffix else base_username
-        
-        # Check if officer already exists (by badge number or email)
-        existing_officer = police_officers_collection.find_one({
-            '$or': [
-                {'badge_number': data.get('badge_number')},
-                {'email': data.get('email')},
-                {'username': username}
-            ]
-        })
-        
-        if existing_officer:
-            return jsonify({'error': 'Officer with this badge number, email or username already exists'}), 400
-        
-        # Create new officer record with username
-        new_officer = {
+        new_off = {
             'badge_number': data.get('badge_number'),
             'full_name': data.get('full_name'),
             'designation': data.get('designation'),
-            'police_station': police_station,  # Use current user's station
+            'police_station': station,
             'email': data.get('email'),
-            'username': username,
+            'username': uname,
             'phone': data.get('phone', ''),
             'status': 'active',
             'created_by': current_user.username,
-            'created_at': datetime.now(timezone.utc),
-            'updated_at': datetime.now(timezone.utc)
+            'created_at': datetime.now(IST)
         }
-        
-        result = police_officers_collection.insert_one(new_officer)
-        
-        return jsonify({
-            'message': 'Police officer added successfully',
-            'officer_id': str(result.inserted_id),
-            'officer': {
-                'badge_number': new_officer['badge_number'],
-                'full_name': new_officer['full_name'],
-                'designation': new_officer['designation'],
-                'police_station': new_officer['police_station'],
-                'username': new_officer['username']
-            }
-        })
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-    
-# Update user profile
-@app.route('/api/profile', methods=['PUT'])
-@login_required
-def update_profile():
-    """API endpoint to update user profile"""
-    try:
-        data = request.get_json()
-        
-        update_data = {
-            'email': data.get('email'),
-            'full_name': data.get('full_name'),
-            'designation': data.get('designation'),
-            'ward_number': data.get('ward_number'),  # Keep only ward number
-            'updated_at': datetime.now(timezone.utc)
-        }
-        
-        # Remove None values
-        update_data = {k: v for k, v in update_data.items() if v is not None}
-        
-        result = POLICE_users.update_one(
-            {'_id': ObjectId(current_user.id)},
-            {'$set': update_data}
-        )
-        
-        if result.modified_count > 0:
-            return jsonify({'message': 'Profile updated successfully'})
-        else:
-            return jsonify({'message': 'Profile update failed'}), 400
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        res = police_officers_collection.insert_one(new_off)
+        return jsonify({'message': 'Added', 'officer_id': str(res.inserted_id)})
 
-@app.route('/api/live-locations')
-@login_required
-def live_locations():
-    """API endpoint to get real-time incident locations from both collections"""
-    try:
-        # Get only active incidents for live tracking from both collections
-        active_incidents_police = list(incidents_police_collection.find(
-            {'status': 'active'},
-            {'latitude': 1, 'longitude': 1, 'title': 1, 'severity': 1, 'incident_type': 1}
-        ))
-        
-        active_incidents_public = list(incidents_collection.find(
-            {'status': 'active'},
-            {'latitude': 1, 'longitude': 1, 'title': 1, 'severity': 1, 'incident_type': 1}
-        ))
-        
-        locations_data = []
-        
-        # Process police incidents
-        for incident in active_incidents_police:
-            incident_data = process_police_incident(incident)
-            # Check assignment status
-            assignment = assigned_cases_collection.find_one({
-                'incident_id': str(incident['_id'])
-            })
-            
-            locations_data.append({
-                'id': incident_data['_id'],
-                'lat': incident_data['latitude'],
-                'lng': incident_data['longitude'],
-                'title': incident_data['title'],
-                'type': incident_data['incident_type'],
-                'severity': incident_data['severity'],
-                'source': 'police',
-                'is_assigned': assignment is not None
-            })
-        
-        # Process public incidents
-        for incident in active_incidents_public:
-            incident_data = process_public_incident(incident)
-            # Check assignment status
-            assignment = assigned_cases_collection.find_one({
-                'incident_id': str(incident['_id'])
-            })
-            
-            locations_data.append({
-                'id': incident_data['_id'],
-                'lat': incident_data['latitude'],
-                'lng': incident_data['longitude'],
-                'title': incident_data['title'],
-                'type': incident_data['incident_type'],
-                'severity': incident_data['severity'],
-                'source': 'public',
-                'is_assigned': assignment is not None
-            })
-        
-        return jsonify(locations_data)
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
-# Add new API endpoint to get assignment status
-@app.route('/api/incidents/<incident_id>/assignment-status')
-@login_required
-def get_assignment_status(incident_id):
-    """API endpoint to check if incident is assigned"""
-    try:
-        assignment = assigned_cases_collection.find_one({
-            'incident_id': incident_id
+    officers = list(police_officers_collection.find({'police_station': current_user.police_station, 'status': 'active'}))
+    data = []
+    for o in officers:
+        data.append({
+            '_id': str(o['_id']),
+            'username': o.get('username'),
+            'full_name': o.get('full_name'),
+            'designation': o.get('designation'),
+            'badge_number': o.get('badge_number')
         })
-        
-        if assignment:
-            return jsonify({
-                'is_assigned': True,
-                'assigned_officer': assignment.get('assigned_officer'),
-                'assigned_at': assignment.get('assigned_at').isoformat(),
-                'assigned_by': assignment.get('assigned_by')
-            })
-        else:
-            return jsonify({'is_assigned': False})
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
+    return jsonify(data)
+
+@app.route('/profile')
+@login_required
+def profile():
+    user = POLICE_users.find_one({'_id': ObjectId(current_user.id)})
+    return render_template('profile.html', user=user)
 
 @app.route('/reports')
 @login_required
 def reports():
-    """Reports page - Show incidents from police and public collections only (exclude resolved_cases from total)"""
-    try:
-        # Get report data from police and public collections ONLY
-        total_police_incidents = incidents_police_collection.count_documents({})
-        total_public_incidents = incidents_collection.count_documents({})
-        
-        # Active incidents from police and public
-        active_police_incidents = incidents_police_collection.count_documents({'status': 'active'})
-        active_public_incidents = incidents_collection.count_documents({'status': 'active'})
-        
-        # Get resolved incidents from ALL sources (for resolved count only)
-        resolved_police = incidents_police_collection.count_documents({'status': 'resolved'})
-        resolved_public = incidents_collection.count_documents({'status': 'resolved'})
-        resolved_cases = db.resolved_cases.count_documents({})
-        
-        # High severity incidents from police and public only
-        high_severity_police = incidents_police_collection.count_documents({'severity': 'high'})
-        high_severity_public = incidents_collection.count_documents({'severity': 'high'})
-        
-        # Get assigned cases count
-        assigned_count = assigned_cases_collection.count_documents({})
-        
-        # CORRECTED: Total incidents = police + public ONLY (exclude resolved_cases)
-        incident_stats = {
-            'total': total_police_incidents + total_public_incidents,  # Police + Public only
-            'active': active_police_incidents + active_public_incidents,
-            'resolved': resolved_police + resolved_public + resolved_cases,  # All resolved sources
-            'high_severity': high_severity_police + high_severity_public,  # Police + Public only
-            'assigned': assigned_count
-        }
-        
-        print(f"📊 REPORTS COUNTS: Total={incident_stats['total']} (Police+Public only), Active={incident_stats['active']}, Resolved={incident_stats['resolved']}, Assigned={incident_stats['assigned']}")
-        
-        # Pass current time to template
-        current_time = datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M')
-        
-        return render_template('reports.html', stats=incident_stats, current_time=current_time)
-    except Exception as e:
-        print(f"Reports error: {e}")
-        current_time = datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M')
-        flash(f'Error loading reports: {e}', 'danger')
-        return render_template('reports.html', stats={}, current_time=current_time)
+    total_police = incidents_police_collection.count_documents({})
+    total_public = incidents_collection.count_documents({})
+    active = incidents_police_collection.count_documents({'status': 'active'}) + incidents_collection.count_documents({'status': 'active'})
+    resolved = incidents_police_collection.count_documents({'status': 'resolved'}) + incidents_collection.count_documents({'status': 'resolved'}) + db.resolved_cases.count_documents({})
+    high = incidents_police_collection.count_documents({'severity': 'high'}) + incidents_collection.count_documents({'severity': 'high'})
+    
+    stats = {'total': total_police+total_public, 'active': active, 'resolved': resolved, 'high_severity': high}
+    return render_template('reports.html', stats=stats, current_time=datetime.now(IST).strftime('%Y-%m-%d %H:%M'))
 
-# Export CSV - Only police incidents
-# Export CSV - BOTH police and public incidents
-@app.route('/reports/export/csv')
-@login_required
-def export_csv():
-    try:
-        # Get incidents from BOTH collections
-        incidents_police = list(incidents_police_collection.find())
-        incidents_public = list(incidents_collection.find())
-        
-        output = io.StringIO()
-        writer = csv.writer(output)
-        
-        # Write header with additional field for source
-        writer.writerow(['Source', 'Incident ID', 'Title', 'Type', 'Severity', 'Status', 'Address', 'Reported By', 'Assigned Officer', 'Created At', 'Latitude', 'Longitude'])
-        
-        # Write police incidents data
-        for incident in incidents_police:
-            created_at = incident.get('created_at', '')
-            if created_at and isinstance(created_at, datetime):
-                created_str = created_at.strftime('%Y-%m-%d %H:%M:%S')
-            else:
-                created_str = str(created_at) if created_at else ''
-                
-            writer.writerow([
-                'Police',
-                incident.get('incident_id', ''),
-                incident.get('title', ''),
-                incident.get('incident_type', ''),
-                incident.get('severity', ''),
-                incident.get('status', ''),
-                incident.get('address', ''),
-                incident.get('reported_by', ''),
-                incident.get('assigned_officer', ''),
-                created_str,
-                incident.get('latitude', ''),
-                incident.get('longitude', '')
-            ])
-        
-        # Write public incidents data
-        for incident in incidents_public:
-            incident_data = process_public_incident(incident)
-            created_at = incident_data['created_at']
-            if isinstance(created_at, datetime):
-                created_str = created_at.strftime('%Y-%m-%d %H:%M:%S')
-            else:
-                created_str = str(created_at)
-                
-            writer.writerow([
-                'Public',
-                incident_data['incident_id'],
-                incident_data['title'],
-                incident_data['incident_type'],
-                incident_data['severity'],
-                incident_data['status'],
-                incident_data['address'],
-                incident_data['reported_by'],
-                incident_data['assigned_officer'],
-                created_str,
-                incident_data['latitude'],
-                incident_data['longitude']
-            ])
-        
-        output.seek(0)
-        
-        return Response(
-            output.getvalue(),
-            mimetype="text/csv",
-            headers={"Content-Disposition": "attachment;filename=swiftaid_all_incidents_export.csv"}
-        )
-    except Exception as e:
-        flash(f'Error exporting CSV: {e}', 'danger')
-        return redirect(url_for('reports'))
-
-# Export PDF - All incidents from all collections including resolved cases
+# Export Routes
 @app.route('/reports/export/pdf')
 @login_required
 def export_pdf():
     try:
-        # Create a BytesIO buffer for the PDF
         buffer = io.BytesIO()
+        doc = SimpleDocTemplate(buffer, pagesize=A4, rightMargin=72, leftMargin=72, topMargin=72, bottomMargin=18)
         
-        # Create the PDF object using the buffer
-        doc = SimpleDocTemplate(
-            buffer,
-            pagesize=A4,
-            rightMargin=72,
-            leftMargin=72,
-            topMargin=72,
-            bottomMargin=18
-        )
-        
-        # Get data from ALL collections
-        incidents_police = list(incidents_police_collection.find().sort('created_at', -1))
-        incidents_public = list(incidents_collection.find().sort('created_at', -1))
-        resolved_cases = list(db.resolved_cases.find().sort('resolved_at', -1))
-        assigned_cases = list(assigned_cases_collection.find().sort('assigned_at', -1))
-        
-        # Container for the 'Flowable' objects
         elements = []
-        
-        # Styles
         styles = getSampleStyleSheet()
-        title_style = ParagraphStyle(
-            'CustomTitle',
-            parent=styles['Heading1'],
-            fontSize=16,
-            spaceAfter=30,
-            alignment=1,  # Center aligned
-            textColor=colors.HexColor('#0d6efd')
-        )
+        title_style = ParagraphStyle('CustomTitle', parent=styles['Heading1'], fontSize=16, spaceAfter=30, alignment=1, textColor=colors.HexColor('#0d6efd'))
         
-        heading_style = ParagraphStyle(
-            'CustomHeading',
-            parent=styles['Heading2'],
-            fontSize=12,
-            spaceAfter=12,
-            textColor=colors.HexColor('#2c3e50')
-        )
-        
-        normal_style = styles["Normal"]
-        
-        # Title
-        title = Paragraph("SWIFTAID POLICE DEPARTMENT - COMPLETE INCIDENTS REPORT", title_style)
-        elements.append(title)
-        
-        # Report metadata
-        current_time = datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S UTC')
-        metadata_text = f"""
-        <b>Generated on:</b> {current_time}<br/>
-        <b>Total Incidents:</b> {len(incidents_police) + len(incidents_public) + len(resolved_cases)}<br/>
-        <b>Police Incidents:</b> {len(incidents_police)} | <b>Public Incidents:</b> {len(incidents_public)} | <b>Resolved Cases:</b> {len(resolved_cases)}<br/>
-        <b>Assigned Cases:</b> {len(assigned_cases)}<br/>
-        <b>Generated by:</b> {current_user.username}<br/>
-        <b>Police Station:</b> {current_user.police_station}
-        """
-        metadata = Paragraph(metadata_text, normal_style)
-        elements.append(metadata)
+        elements.append(Paragraph("SWIFTAID POLICE DEPARTMENT - INCIDENTS REPORT", title_style))
+        elements.append(Paragraph(f"Generated on: {datetime.now(IST).strftime('%Y-%m-%d %H:%M:%S IST')}", styles["Normal"]))
         elements.append(Spacer(1, 20))
         
-        # Police Incidents Section
-        if incidents_police:
-            police_title = Paragraph("POLICE INCIDENTS", heading_style)
-            elements.append(police_title)
-            
-            # Create table for police incidents
-            police_data = [['ID', 'Title', 'Type', 'Severity', 'Status', 'Location', 'Reported', 'Officer']]
-            
-            for incident in incidents_police:
-                created_at = incident.get('created_at', '')
-                if created_at:
-                    if isinstance(created_at, datetime):
-                        created_str = created_at.strftime('%m/%d/%Y')
-                    else:
-                        created_str = str(created_at)[:10]
-                else:
-                    created_str = 'Unknown'
-                
-                police_data.append([
-                    incident.get('incident_id', 'N/A')[:8],
-                    incident.get('title', 'No Title')[:20],
-                    incident.get('incident_type', 'Unknown')[:15],
-                    incident.get('severity', 'medium').title(),
-                    incident.get('status', 'pending').title(),
-                    incident.get('address', 'Unknown')[:15],
-                    created_str,
-                    incident.get('assigned_officer', 'Unassigned')[:12]
+        # --- POLICE INCIDENTS SECTION ---
+        police_incidents = list(incidents_police_collection.find().sort('created_at', -1))
+        if police_incidents:
+            elements.append(Paragraph("POLICE INCIDENTS", styles['Heading2']))
+            data = [['ID', 'Title', 'Severity', 'Status', 'Date']]
+            for i in police_incidents:
+                data.append([
+                    i.get('incident_id', '')[:12],
+                    i.get('title', '')[:50],  # Increased limit
+                    i.get('severity', '').title(),
+                    i.get('status', '').title(),
+                    convert_to_ist(i.get('created_at')).strftime('%m/%d %H:%M')
                 ])
             
-            police_table = Table(police_data, colWidths=[0.6*inch, 1.2*inch, 0.8*inch, 0.6*inch, 0.6*inch, 1.0*inch, 0.6*inch, 0.8*inch])
-            police_table.setStyle(TableStyle([
+            t = Table(data, colWidths=[1.1*inch, 3.0*inch, 0.7*inch, 0.7*inch, 1.1*inch])
+            t.setStyle(TableStyle([
                 ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#0d6efd')),
                 ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
                 ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
                 ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-                ('FONTSIZE', (0, 0), (-1, 0), 8),
-                ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
-                ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
-                ('FONTSIZE', (0, 1), (-1, -1), 6),
-                ('GRID', (0, 0), (-1, -1), 1, colors.black),
-                ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+                ('GRID', (0, 0), (-1, -1), 1, colors.black)
             ]))
-            elements.append(police_table)
+            elements.append(t)
             elements.append(Spacer(1, 20))
-        
-        # Public Incidents Section
-        if incidents_public:
-            public_title = Paragraph("PUBLIC INCIDENTS", heading_style)
-            elements.append(public_title)
             
-            # Create table for public incidents
-            public_data = [['ID', 'Title', 'Type', 'Severity', 'Status', 'Location', 'Reported By']]
-            
-            for incident in incidents_public:
-                incident_data = process_public_incident(incident)
-                created_at = incident_data.get('created_at', '')
-                if created_at:
-                    if isinstance(created_at, datetime):
-                        created_str = created_at.strftime('%m/%d/%Y')
-                    else:
-                        created_str = str(created_at)[:10]
-                else:
-                    created_str = 'Unknown'
-                
-                public_data.append([
-                    incident_data['incident_id'][:8],
-                    incident_data['title'][:20],
-                    incident_data['incident_type'][:15],
-                    incident_data['severity'].title(),
-                    incident_data['status'].title(),
-                    incident_data['address'][:15],
-                    incident_data['reported_by'][:12]
+        # --- PUBLIC INCIDENTS SECTION ---
+        public_incidents = list(incidents_collection.find().sort('created_at', -1))
+        if public_incidents:
+            elements.append(Paragraph("PUBLIC INCIDENTS", styles['Heading2']))
+            data = [['ID', 'Title', 'Severity', 'Status', 'Date']]
+            for i in public_incidents:
+                d = process_public_incident(i)
+                data.append([
+                    d['incident_id'][:12],
+                    d['title'][:50],
+                    d['severity'].title(),
+                    d['status'].title(),
+                    d['created_at'].strftime('%m/%d %H:%M')
                 ])
             
-            public_table = Table(public_data, colWidths=[0.6*inch, 1.2*inch, 0.8*inch, 0.6*inch, 0.6*inch, 1.0*inch, 0.8*inch])
-            public_table.setStyle(TableStyle([
+            t = Table(data, colWidths=[1.1*inch, 3.0*inch, 0.7*inch, 0.7*inch, 1.1*inch])
+            t.setStyle(TableStyle([
                 ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#6c757d')),
                 ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
                 ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
                 ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-                ('FONTSIZE', (0, 0), (-1, 0), 8),
-                ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
-                ('BACKGROUND', (0, 1), (-1, -1), colors.lightgrey),
-                ('FONTSIZE', (0, 1), (-1, -1), 6),
-                ('GRID', (0, 0), (-1, -1), 1, colors.black),
-                ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+                ('GRID', (0, 0), (-1, -1), 1, colors.black)
             ]))
-            elements.append(public_table)
+            elements.append(t)
             elements.append(Spacer(1, 20))
-        
-        # Assigned Cases Section
-        if assigned_cases:
-            assigned_title = Paragraph("ASSIGNED CASES", heading_style)
-            elements.append(assigned_title)
-            
-            # Create table for assigned cases
-            assigned_data = [['Incident ID', 'Title', 'Assigned Officer', 'Assigned By', 'Assigned At']]
-            
-            for case in assigned_cases:
-                assigned_at = case.get('assigned_at', '')
-                if assigned_at:
-                    if isinstance(assigned_at, datetime):
-                        assigned_str = assigned_at.strftime('%m/%d/%Y')
-                    else:
-                        assigned_str = str(assigned_at)[:10]
-                else:
-                    assigned_str = 'Unknown'
-                
-                incident_data = case.get('incident_data', {})
-                assigned_data.append([
-                    incident_data.get('incident_id', 'N/A')[:8],
-                    incident_data.get('title', 'No Title')[:20],
-                    case.get('assigned_officer', 'Unknown')[:15],
-                    case.get('assigned_by', 'Unknown')[:12],
-                    assigned_str
-                ])
-            
-            assigned_table = Table(assigned_data, colWidths=[0.8*inch, 1.2*inch, 0.8*inch, 0.8*inch, 0.6*inch])
-            assigned_table.setStyle(TableStyle([
-                ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#198754')),
-                ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
-                ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-                ('FONTSIZE', (0, 0), (-1, 0), 8),
-                ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
-                ('BACKGROUND', (0, 1), (-1, -1), colors.HexColor('#e8f5e8')),
-                ('FONTSIZE', (0, 1), (-1, -1), 6),
-                ('GRID', (0, 0), (-1, -1), 1, colors.black),
-                ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-            ]))
-            elements.append(assigned_table)
-            elements.append(Spacer(1, 20))
-        
-        # Resolved Cases Section
-        if resolved_cases:
-            resolved_title = Paragraph("RESOLVED CASES", heading_style)
-            elements.append(resolved_title)
-            
-            # Create table for resolved cases
-            resolved_data = [['ID', 'Title', 'Type', 'Severity', 'Location', 'Resolved By', 'Resolved At']]
-            
-            for case in resolved_cases:
-                resolved_at = case.get('resolved_at', '')
-                if resolved_at:
-                    if isinstance(resolved_at, datetime):
-                        resolved_str = resolved_at.strftime('%m/%d/%Y')
-                    else:
-                        resolved_str = str(resolved_at)[:10]
-                else:
-                    resolved_str = 'Unknown'
-                
-                resolved_data.append([
-                    case.get('incident_id', 'N/A')[:8],
-                    case.get('title', 'No Title')[:20],
-                    case.get('incident_type', 'Unknown')[:15],
-                    case.get('severity', 'medium').title(),
-                    case.get('address', 'Unknown')[:15],
-                    case.get('resolved_by', 'Unknown')[:12],
-                    resolved_str
-                ])
-            
-            resolved_table = Table(resolved_data, colWidths=[0.6*inch, 1.2*inch, 0.8*inch, 0.6*inch, 1.0*inch, 0.8*inch, 0.6*inch])
-            resolved_table.setStyle(TableStyle([
-                ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#6c757d')),
-                ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
-                ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-                ('FONTSIZE', (0, 0), (-1, 0), 8),
-                ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
-                ('BACKGROUND', (0, 1), (-1, -1), colors.lightgrey),
-                ('FONTSIZE', (0, 1), (-1, -1), 6),
-                ('GRID', (0, 0), (-1, -1), 1, colors.black),
-                ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-            ]))
-            elements.append(resolved_table)
-            elements.append(Spacer(1, 20))
-        
-        # Summary Statistics
-        summary_title = Paragraph("SUMMARY STATISTICS", heading_style)
-        elements.append(summary_title)
-        
-        active_police = len([inc for inc in incidents_police if inc.get('status') == 'active'])
-        active_public = len([inc for inc in incidents_public if process_public_incident(inc).get('status') == 'active'])
-        
-        high_severity_police = len([inc for inc in incidents_police if inc.get('severity') == 'high'])
-        high_severity_public = len([inc for inc in incidents_public if process_public_incident(inc).get('severity') == 'high'])
-        high_severity_resolved = len([case for case in resolved_cases if case.get('severity') == 'high'])
-        
-        summary_data = [
-            ['Category', 'Police', 'Public', 'Resolved', 'Assigned', 'Total'],
-            ['Total Incidents', len(incidents_police), len(incidents_public), len(resolved_cases), len(assigned_cases), len(incidents_police) + len(incidents_public) + len(resolved_cases)],
-            ['Active', active_police, active_public, 0, len(assigned_cases), active_police + active_public],
-            ['High Severity', high_severity_police, high_severity_public, high_severity_resolved, 0, high_severity_police + high_severity_public + high_severity_resolved]
-        ]
-        
-        summary_table = Table(summary_data, colWidths=[1.2*inch, 0.7*inch, 0.7*inch, 0.7*inch, 0.7*inch, 0.7*inch])
-        summary_table.setStyle(TableStyle([
-            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#6f42c1')),
-            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
-            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-            ('FONTSIZE', (0, 0), (-1, -1), 8),
-            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
-            ('BACKGROUND', (0, 1), (-1, -1), colors.HexColor('#f8f9fa')),
-            ('GRID', (0, 0), (-1, -1), 1, colors.black),
-            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-        ]))
-        elements.append(summary_table)
-        
-        # Footer note
-        elements.append(Spacer(1, 20))
-        footer = Paragraph(
-            "<i>This report was generated automatically by the SwiftAid Police System. " +
-            "For official use only.</i>",
-            ParagraphStyle(
-                'Footer',
-                parent=normal_style,
-                fontSize=8,
-                textColor=colors.gray,
-                alignment=1
-            )
-        )
-        elements.append(footer)
-        
-        # Build PDF
+
         doc.build(elements)
-        
-        # Get the value from the buffer
         pdf = buffer.getvalue()
         buffer.close()
-        
-        # Create response with proper PDF headers
-        response = Response(
-            pdf,
-            mimetype='application/pdf',
-            headers={
-                'Content-Disposition': 'attachment;filename=swiftaid_complete_incidents_report.pdf',
-                'Content-Type': 'application/pdf'
-            }
-        )
-        
-        return response
-        
+        return Response(pdf, mimetype='application/pdf', headers={'Content-Disposition': 'attachment;filename=swiftaid_report.pdf', 'Content-Type': 'application/pdf'})
     except Exception as e:
-        print(f"PDF export error: {e}")
-        import traceback
-        traceback.print_exc()
-        flash(f'Error exporting PDF: {e}', 'danger')
+        print(f"PDF Error: {e}")
+        flash(f"PDF Export error: {e}", "danger")
         return redirect(url_for('reports'))
 
-# Export Excel - All incidents from both collections (CSV format)
+@app.route('/reports/export/csv')
+@login_required
+def export_csv():
+    try:
+        output = io.StringIO()
+        writer = csv.writer(output)
+        writer.writerow(['Source', 'Incident ID', 'Title', 'Type', 'Severity', 'Status', 'Address', 'Reported By', 'Created At'])
+        
+        for i in incidents_police_collection.find():
+            writer.writerow(['Police', i.get('incident_id'), i.get('title'), i.get('incident_type'), i.get('severity'), i.get('status'), i.get('address'), i.get('reported_by'), convert_to_ist(i.get('created_at')).strftime('%Y-%m-%d %H:%M:%S')])
+            
+        for i in incidents_collection.find():
+            d = process_public_incident(i)
+            writer.writerow(['Public', d['incident_id'], d['title'], d['incident_type'], d['severity'], d['status'], d['address'], d['reported_by'], d['created_at'].strftime('%Y-%m-%d %H:%M:%S')])
+            
+        return Response(output.getvalue(), mimetype="text/csv", headers={"Content-Disposition": "attachment;filename=swiftaid_incidents.csv"})
+    except Exception as e:
+        flash(f"Export error: {e}", "danger")
+        return redirect(url_for('reports'))
+
 @app.route('/reports/export/excel')
 @login_required
 def export_excel():
     try:
-        incidents_police = list(incidents_police_collection.find())
-        incidents_public = list(incidents_collection.find())
-        
-        # Create a BytesIO object for binary data
         output = io.BytesIO()
-        
-        # Use csv writer with proper encoding
-        output.write(b'\xef\xbb\xbf')  # UTF-8 BOM for Excel compatibility
-        
-        # Create a text wrapper for the BytesIO object
+        output.write(b'\xef\xbb\xbf')
         text_output = io.TextIOWrapper(output, encoding='utf-8', newline='')
         writer = csv.writer(text_output)
         
-        # Write header
-        writer.writerow(['Source', 'Incident ID', 'Title', 'Type', 'Severity', 'Status', 'Address', 'Reported By', 'Assigned Officer', 'Created At', 'Latitude', 'Longitude'])
+        writer.writerow(['Source', 'Incident ID', 'Title', 'Type', 'Severity', 'Status', 'Address', 'Reported By', 'Created At'])
         
-        # Write police incidents data
-        for incident in incidents_police:
-            created_at = incident.get('created_at', '')
-            if created_at and isinstance(created_at, datetime):
-                created_str = created_at.strftime('%Y-%m-%d %H:%M:%S')
-            else:
-                created_str = str(created_at) if created_at else ''
-                
-            writer.writerow([
-                'Police',
-                incident.get('incident_id', ''),
-                incident.get('title', ''),
-                incident.get('incident_type', ''),
-                incident.get('severity', ''),
-                incident.get('status', ''),
-                incident.get('address', ''),
-                incident.get('reported_by', ''),
-                incident.get('assigned_officer', ''),
-                created_str,
-                incident.get('latitude', ''),
-                incident.get('longitude', '')
-            ])
-        
-        # Write public incidents data
-        for incident in incidents_public:
-            incident_data = process_public_incident(incident)
-            created_at = incident_data['created_at']
-            if isinstance(created_at, datetime):
-                created_str = created_at.strftime('%Y-%m-%d %H:%M:%S')
-            else:
-                created_str = str(created_at)
-                
-            writer.writerow([
-                'Public',
-                incident_data['incident_id'],
-                incident_data['title'],
-                incident_data['incident_type'],
-                incident_data['severity'],
-                incident_data['status'],
-                incident_data['address'],
-                incident_data['reported_by'],
-                incident_data['assigned_officer'],
-                created_str,
-                incident_data['latitude'],
-                incident_data['longitude']
-            ])
-        
-        # Flush the text wrapper and get the bytes
+        for i in incidents_police_collection.find():
+            writer.writerow(['Police', i.get('incident_id'), i.get('title'), i.get('incident_type'), i.get('severity'), i.get('status'), i.get('address'), i.get('reported_by'), convert_to_ist(i.get('created_at')).strftime('%Y-%m-%d %H:%M:%S')])
+            
+        for i in incidents_collection.find():
+            d = process_public_incident(i)
+            writer.writerow(['Public', d['incident_id'], d['title'], d['incident_type'], d['severity'], d['status'], d['address'], d['reported_by'], d['created_at'].strftime('%Y-%m-%d %H:%M:%S')])
+            
         text_output.flush()
         csv_data = output.getvalue()
         text_output.close()
         output.close()
         
-        return Response(
-            csv_data,
-            mimetype="text/csv",
-            headers={"Content-Disposition": "attachment;filename=swiftaid_incidents_export.csv"}
-        )
+        return Response(csv_data, mimetype="text/csv", headers={"Content-Disposition": "attachment;filename=swiftaid_incidents_excel.csv"})
     except Exception as e:
-        print(f"Excel export error: {e}")
-        import traceback
-        traceback.print_exc()
-        flash(f'Error exporting Excel: {e}', 'danger')
+        flash(f"Export error: {e}", "danger")
         return redirect(url_for('reports'))
 
-@app.route('/database')
-@login_required
-def database():
-    """Database search page with recent incidents and complete statistics"""
-    try:
-        # Get recent incidents from BOTH collections (ALL statuses)
-        recent_police_incidents = list(incidents_police_collection.find().sort('created_at', -1).limit(5))
-        recent_public_incidents = list(incidents_collection.find().sort('created_at', -1).limit(5))
-        
-        # Combine and process incidents
-        recent_incidents = []
-        
-        # Process police incidents
-        for incident in recent_police_incidents:
-            incident_data = process_police_incident(incident)
-            # Check assignment status
-            assignment = assigned_cases_collection.find_one({
-                'incident_id': str(incident['_id'])
-            })
-            incident_data['is_assigned'] = assignment is not None
-            recent_incidents.append(incident_data)
-        
-        # Process public incidents
-        for incident in recent_public_incidents:
-            incident_data = process_public_incident(incident)
-            # Check assignment status
-            assignment = assigned_cases_collection.find_one({
-                'incident_id': str(incident['_id'])
-            })
-            incident_data['is_assigned'] = assignment is not None
-            recent_incidents.append(incident_data)
-        
-        # Sort by creation date (newest first) and take top 5
-        recent_incidents.sort(key=lambda x: x['created_at'], reverse=True)
-        recent_incidents = recent_incidents[:5]
-        
-        # Get complete stats same as dashboard page
-        total_police_incidents = incidents_police_collection.count_documents({})
-        total_public_incidents = incidents_collection.count_documents({})
-        
-        # Total incidents = police + public (EXCLUDING resolved_cases)
-        total_incidents = total_police_incidents + total_public_incidents
-        
-        # Active incidents = only active status from police and public
-        active_police_incidents = incidents_police_collection.count_documents({'status': 'active'})
-        active_public_incidents = incidents_collection.count_documents({'status': 'active'})
-        active_incidents = active_police_incidents + active_public_incidents
-        
-        # Resolved incidents = resolved from police + resolved from public + resolved_cases
-        resolved_police_incidents = incidents_police_collection.count_documents({'status': 'resolved'})
-        resolved_public_incidents = incidents_collection.count_documents({'status': 'resolved'})
-        resolved_from_cases = db.resolved_cases.count_documents({})
-        total_resolved_incidents = resolved_police_incidents + resolved_public_incidents + resolved_from_cases
-        
-        # Get incidents assigned to current user from police and public collections only
-        user_police_incidents = incidents_police_collection.count_documents({'assigned_officer': current_user.username})
-        user_public_incidents = incidents_collection.count_documents({'assigned_officer': current_user.username})
-        user_incidents = user_police_incidents + user_public_incidents
-        
-        # Get active officers count
-        active_officers = police_officers_collection.count_documents({'status': 'active'})
-        
-        # Get assigned cases count
-        assigned_count = assigned_cases_collection.count_documents({})
-        unassigned_count = total_incidents - assigned_count
-        
-        print(f"📊 DATABASE PAGE COUNTS:")
-        print(f"   Police Incidents: {total_police_incidents}")
-        print(f"   Public Incidents: {total_public_incidents}")
-        print(f"   Resolved Cases: {resolved_from_cases}")
-        print(f"   TOTAL (Police+Public): {total_incidents}")
-        print(f"   Active: {active_incidents}")
-        print(f"   Resolved (All): {total_resolved_incidents}")
-        print(f"   User Assigned: {user_incidents}")
-        print(f"   Assigned Cases: {assigned_count}")
-        print(f"   Unassigned Cases: {unassigned_count}")
-        print(f"   Recent Incidents Found: {len(recent_incidents)}")
-        
-        return render_template('database.html', 
-                             incidents=recent_incidents,
-                             total_incidents=total_incidents,
-                             active_incidents=active_incidents,
-                             resolved_incidents=total_resolved_incidents,
-                             user_incidents=user_incidents,
-                             active_officers=active_officers,
-                             assigned_count=assigned_count,
-                             unassigned_count=unassigned_count)
-    except Exception as e:
-        print(f"Database page error: {e}")
-        import traceback
-        traceback.print_exc()
-        return render_template('database.html', 
-                             incidents=[],
-                             total_incidents=0,
-                             active_incidents=0,
-                             resolved_incidents=0,
-                             user_incidents=0,
-                             active_officers=0,
-                             assigned_count=0,
-                             unassigned_count=0)
-    
-# Profile page
-@app.route('/profile')
-@login_required
-def profile():
-    """User profile page"""
-    try:
-        user_data = POLICE_users.find_one({'_id': ObjectId(current_user.id)})
-        return render_template('profile.html', user=user_data)
-    except Exception as e:
-        flash(f'Error loading profile: {e}', 'danger')
-        return render_template('profile.html', user=None)
-
-@app.route('/api/police-users-count')
-@login_required
-def police_users_count():
-    """API endpoint to get police users count"""
-    try:
-        users_count = POLICE_users.count_documents({})
-        return jsonify({'count': users_count})
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
-@app.route('/api/recent-incidents')
-@login_required
-def recent_incidents():
-    """API endpoint to get recent incidents for dashboard"""
-    try:
-        # FIXED: Get recent incidents from BOTH collections (ALL statuses)
-        recent_police_incidents = list(incidents_police_collection.find().sort('created_at', -1).limit(5))
-        recent_public_incidents = list(incidents_collection.find().sort('created_at', -1).limit(5))
-        
-        # Combine and process incidents
-        recent_incidents = []
-        
-        # Process police incidents
-        for incident in recent_police_incidents:
-            incident_data = process_police_incident(incident)
-            # Check assignment status
-            assignment = assigned_cases_collection.find_one({
-                'incident_id': str(incident['_id'])
-            })
-            incident_data['is_assigned'] = assignment is not None
-            recent_incidents.append(incident_data)
-        
-        # Process public incidents
-        for incident in recent_public_incidents:
-            incident_data = process_public_incident(incident)
-            # Check assignment status
-            assignment = assigned_cases_collection.find_one({
-                'incident_id': str(incident['_id'])
-            })
-            incident_data['is_assigned'] = assignment is not None
-            recent_incidents.append(incident_data)
-        
-        # Sort by creation date (newest first) and take top 5
-        recent_incidents.sort(key=lambda x: x['created_at'], reverse=True)
-        recent_incidents = recent_incidents[:5]
-        
-        # Convert to JSON serializable format
-        incidents_data = []
-        for incident in recent_incidents:
-            incidents_data.append({
-                'id': incident['_id'],
-                'title': incident['title'],
-                'description': incident['description'],
-                'severity': incident['severity'],
-                'status': incident['status'],
-                'latitude': incident['latitude'],
-                'longitude': incident['longitude'],
-                'address': incident['address'],
-                'source': incident['source'],
-                'is_assigned': incident['is_assigned'],
-                'created_at': incident['created_at'].isoformat() if hasattr(incident['created_at'], 'isoformat') else incident['created_at']
-            })
-        
-        print(f"🔄 API Recent Incidents: Returning {len(incidents_data)} incidents")
-        return jsonify(incidents_data)
-        
-    except Exception as e:
-        print(f"Error in recent incidents API: {e}")
-        return jsonify({'error': str(e)}), 500
-    
-@app.route('/debug/check-assignments')
-@login_required
-def debug_check_assignments():
-    """Debug endpoint to check assignment functionality"""
-    try:
-        # Check if ASSIGNED_CASES collection exists and is accessible
-        collections = db.list_collection_names()
-        
-        # Try to insert a test document
-        test_doc = {
-            'test': 'assignment_test',
-            'timestamp': datetime.now(timezone.utc),
-            'user': current_user.username
-        }
-        
-        result = assigned_cases_collection.insert_one(test_doc)
-        
-        # Delete the test document
-        assigned_cases_collection.delete_one({'_id': result.inserted_id})
-        
-        return jsonify({
-            'status': 'success',
-            'collections': collections,
-            'assigned_cases_count': assigned_cases_collection.count_documents({}),
-            'message': 'ASSIGNED_CASES collection is accessible'
-        })
-    except Exception as e:
-        return jsonify({
-            'status': 'error',
-            'error': str(e),
-            'message': 'ASSIGNED_CASES collection has issues'
-        }), 500
-
-@app.route('/api/recent-activity')
-@login_required
-def recent_activity():
-    """API endpoint to get recent database activity"""
-    try:
-        activities = []
-        
-        # Helper function to get safe time string
-        def get_safe_time(time_obj):
-            if isinstance(time_obj, datetime):
-                return time_obj.strftime('%Y-%m-%d %H:%M')
-            elif isinstance(time_obj, str):
-                # For string timestamps, just return a simplified version
-                if len(time_obj) >= 10:
-                    return time_obj[:16]  # Take first 16 chars (YYYY-MM-DD HH:MM)
-                else:
-                    return "Recently"
-            else:
-                return "Recently"
-        
-        # Get recent police incidents
-        recent_police_incidents = list(incidents_police_collection.find()
-            .sort('created_at', -1)
-            .limit(2))
-        
-        for incident in recent_police_incidents:
-            time_str = get_safe_time(incident.get('created_at'))
-            # Check assignment status
-            assignment = assigned_cases_collection.find_one({
-                'incident_id': str(incident['_id'])
-            })
-            is_assigned = assignment is not None
-            
-            activities.append({
-                'type': 'incident',
-                'icon': 'fa-exclamation-triangle',
-                'color': 'danger' if incident.get('severity') == 'high' else 'warning',
-                'text': f"Police Incident: {incident.get('title', 'Untitled')} {'(Assigned)' if is_assigned else '(Unassigned)'}",
-                'time': time_str,
-                'timestamp': incident.get('created_at')
-            })
-        
-        # Get recent public incidents
-        recent_public_incidents = list(incidents_collection.find()
-            .sort('created_at', -1)
-            .limit(2))
-        
-        for incident in recent_public_incidents:
-            incident_data = process_public_incident(incident)
-            time_str = get_safe_time(incident_data.get('created_at'))
-            # Check assignment status
-            assignment = assigned_cases_collection.find_one({
-                'incident_id': str(incident['_id'])
-            })
-            is_assigned = assignment is not None
-            
-            activities.append({
-                'type': 'incident',
-                'icon': 'fa-exclamation-triangle',
-                'color': 'danger' if incident_data.get('severity') == 'high' else 'warning',
-                'text': f"Public Alert: {incident_data.get('title', 'Untitled')} {'(Assigned)' if is_assigned else '(Unassigned)'}",
-                'time': time_str,
-                'timestamp': incident_data.get('created_at')
-            })
-        
-        # Get recent assigned cases
-        recent_assignments = list(assigned_cases_collection.find()
-            .sort('assigned_at', -1)
-            .limit(2))
-        
-        for assignment in recent_assignments:
-            time_str = get_safe_time(assignment.get('assigned_at'))
-            activities.append({
-                'type': 'assignment',
-                'icon': 'fa-user-check',
-                'color': 'success',
-                'text': f"Case Assigned: {assignment.get('incident_data', {}).get('title', 'Untitled')} to {assignment.get('assigned_officer')}",
-                'time': time_str,
-                'timestamp': assignment.get('assigned_at')
-            })
-        
-        # Get recent resolved cases
-        recent_resolved_cases = list(db.resolved_cases.find()
-            .sort('resolved_at', -1)
-            .limit(1))
-        
-        for resolved_case in recent_resolved_cases:
-            time_str = get_safe_time(resolved_case.get('resolved_at'))
-            activities.append({
-                'type': 'resolved',
-                'icon': 'fa-check-circle',
-                'color': 'success',
-                'text': f"Case Resolved: {resolved_case.get('title', 'Untitled')}",
-                'time': time_str,
-                'timestamp': resolved_case.get('resolved_at')
-            })
-        
-        # Get recent officers
-        recent_officers = list(police_officers_collection.find()
-            .sort('created_at', -1)
-            .limit(2))
-        
-        for officer in recent_officers:
-            time_str = get_safe_time(officer.get('created_at'))
-            activities.append({
-                'type': 'officer',
-                'icon': 'fa-user-plus',
-                'color': 'success',
-                'text': f"Officer added: {officer.get('full_name', officer.get('username', 'Unknown'))}",
-                'time': time_str,
-                'timestamp': officer.get('created_at')
-            })
-        
-        # Add system activity
-        activities.append({
-            'type': 'system',
-            'icon': 'fa-sync-alt',
-            'color': 'primary',
-            'text': 'Database backup completed',
-            'time': '1 hour ago',
-            'timestamp': None
-        })
-        
-        # Sort activities - handle different timestamp types safely
-        def get_safe_sort_key(activity):
-            timestamp = activity.get('timestamp')
-            if not timestamp:
-                return "0000-00-00T00:00:00"
-            
-            if isinstance(timestamp, datetime):
-                return timestamp.isoformat()
-            elif isinstance(timestamp, str):
-                return timestamp
-            else:
-                return "0000-00-00T00:00:00"
-        
-        activities.sort(key=get_safe_sort_key, reverse=True)
-        
-        return jsonify({'activities': activities[:5]})
-        
-    except Exception as e:
-        print(f"❌ Error getting recent activity: {e}")
-        import traceback
-        traceback.print_exc()
-        return jsonify({'error': str(e)}), 500
-
-@app.route('/api/public-incidents-count')
-@login_required
-def public_incidents_count():
-    """API endpoint to get public incidents count"""
-    try:
-        public_count = incidents_collection.count_documents({})
-        return jsonify({'count': public_count})
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
-@app.route('/api/database-stats')
-@login_required
-def database_stats():
-    """API endpoint to get all database statistics"""
-    try:
-        # Get resolved counts from all sources
-        resolved_police = incidents_police_collection.count_documents({'status': 'resolved'})
-        resolved_public = incidents_collection.count_documents({'status': 'resolved'})
-        resolved_cases = db.resolved_cases.count_documents({})
-        
-        stats = {
-            'police_incidents': incidents_police_collection.count_documents({}),
-            'public_incidents': incidents_collection.count_documents({}),
-            'resolved_cases': db.resolved_cases.count_documents({}),
-            'assigned_cases': assigned_cases_collection.count_documents({}),
-            'total_resolved': resolved_police + resolved_public + resolved_cases,  # Total resolved
-            'officers': police_officers_collection.count_documents({}),
-            'users': POLICE_users.count_documents({}),
-            'collections': 6  # incidents_police, police_officers, POLICE_users, incidents, resolved_cases, ASSIGNED_CASES
-        }
-        return jsonify(stats)
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-    
-# Debug routes
-@app.route('/debug/database')
-def debug_database():
-    """Debug route to check database contents"""
-    try:
-        # Check all collections
-        collections_info = {
-            'POLICE_users_count': POLICE_users.count_documents({}),
-            'incidents_count': incidents_collection.count_documents({}),
-            'incidents_police_count': incidents_police_collection.count_documents({}),
-            'police_officers_count': police_officers_collection.count_documents({}),
-            'assigned_cases_count': assigned_cases_collection.count_documents({}),
-        }
-        
-        # Get sample data from each collection
-        police_users_sample = list(POLICE_users.find().limit(3))
-        incidents_police_sample = list(incidents_police_collection.find().limit(3))
-        incidents_public_sample = list(incidents_collection.find().limit(3))
-        police_officers_sample = list(police_officers_collection.find().limit(3))
-        assigned_cases_sample = list(assigned_cases_collection.find().limit(3))
-        
-        return jsonify({
-            'collections': collections_info,
-            'police_users_sample': police_users_sample,
-            'incidents_police_sample': incidents_police_sample,
-            'incidents_public_sample': incidents_public_sample,
-            'police_officers_sample': police_officers_sample,
-            'assigned_cases_sample': assigned_cases_sample,
-        })
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
-@app.route('/debug/incidents-data')
-@login_required
-def debug_incidents_data():
-    """Debug route to see raw incidents data"""
-    try:
-        public_incidents = list(incidents_collection.find())
-        police_incidents = list(incidents_police_collection.find())
-        assigned_cases = list(assigned_cases_collection.find())
-        
-        result = {
-            'public_count': len(public_incidents),
-            'police_count': len(police_incidents),
-            'assigned_cases_count': len(assigned_cases),
-            'public_incidents': [],
-            'police_incidents': [],
-            'assigned_cases': []
-        }
-        
-        for incident in public_incidents:
-            incident_data = process_public_incident(incident)
-            # Check assignment status
-            assignment = assigned_cases_collection.find_one({
-                'incident_id': str(incident['_id'])
-            })
-            
-            result['public_incidents'].append({
-                'id': incident_data['_id'],
-                'title': incident_data['title'],
-                'description': incident_data['description'],
-                'incident_type': incident_data['incident_type'],
-                'severity': incident_data['severity'],
-                'status': incident_data['status'],
-                'address': incident_data['address'],
-                'assigned_officer': incident_data['assigned_officer'],
-                'created_at': incident_data['created_at'].isoformat(),
-                'is_assigned': assignment is not None
-            })
-        
-        for incident in police_incidents:
-            incident_data = process_police_incident(incident)
-            # Check assignment status
-            assignment = assigned_cases_collection.find_one({
-                'incident_id': str(incident['_id'])
-            })
-            
-            result['police_incidents'].append({
-                'id': incident_data['_id'],
-                'title': incident_data['title'],
-                'description': incident_data['description'],
-                'incident_type': incident_data['incident_type'],
-                'severity': incident_data['severity'],
-                'status': incident_data['status'],
-                'address': incident_data['address'],
-                'assigned_officer': incident_data['assigned_officer'],
-                'created_at': incident_data['created_at'].isoformat(),
-                'is_assigned': assignment is not None
-            })
-        
-        for case in assigned_cases:
-            result['assigned_cases'].append({
-                'incident_id': case.get('incident_id'),
-                'assigned_officer': case.get('assigned_officer'),
-                'assigned_by': case.get('assigned_by'),
-                'assigned_at': case.get('assigned_at').isoformat() if case.get('assigned_at') else None,
-                'incident_title': case.get('incident_data', {}).get('title', 'Unknown')
-            })
-        
-        return jsonify(result)
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
-@app.route('/test-incidents')
-@login_required
-def test_incidents():
-    """Simple test to see incidents from both collections"""
-    try:
-        # Count incidents in each collection
-        police_count = incidents_police_collection.count_documents({})
-        public_count = incidents_collection.count_documents({})
-        assigned_count = assigned_cases_collection.count_documents({})
-        
-        # Get sample titles
-        police_titles = [inc.get('title', 'No title') for inc in incidents_police_collection.find().limit(3)]
-        public_incidents = list(incidents_collection.find().limit(3))
-        public_titles = [process_public_incident(inc)['title'] for inc in public_incidents]
-        assigned_titles = [case.get('incident_data', {}).get('title', 'No title') for case in assigned_cases_collection.find().limit(3)]
-        
-        return jsonify({
-            'police_collection_count': police_count,
-            'public_collection_count': public_count,
-            'assigned_cases_count': assigned_count,
-            'police_sample_titles': police_titles,
-            'public_sample_titles': public_titles,
-            'assigned_sample_titles': assigned_titles,
-            'total_incidents': police_count + public_count
-        })
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
-# Initialize database
-def init_db():
-    try:
-        print("🔄 Initializing database...")
-        
-        # Create indexes for the new ASSIGNED_CASES collection
-        try:
-            assigned_cases_collection.create_index([('incident_id', 1)], unique=True)
-            assigned_cases_collection.create_index([('assigned_officer', 1)])
-            assigned_cases_collection.create_index([('assigned_at', -1)])
-            print("✅ Created indexes for ASSIGNED_CASES collection")
-        except Exception as e:
-            print(f"ℹ️ ASSIGNED_CASES index creation note: {e}")
-        
-        # Just fix the badge numbers and skip index creation entirely
-        officers_without_badge = police_officers_collection.find({
-            '$or': [
-                {'badge_number': None},
-                {'badge_number': {'$exists': False}}
-            ]
-        })
-        
-        badge_updates = 0
-        for officer in officers_without_badge:
-            new_badge_number = f"BDG-{str(officer['_id'])[-6:].upper()}"
-            police_officers_collection.update_one(
-                {'_id': officer['_id']},
-                {'$set': {'badge_number': new_badge_number}}
-            )
-            badge_updates += 1
-        
-        if badge_updates > 0:
-            print(f"   ✅ Updated {badge_updates} officers with badge numbers")
-        
-        print("✅ Database initialization completed")
-        
-        # Check existing data counts
-        existing_police_users = POLICE_users.count_documents({})
-        existing_police_incidents = incidents_police_collection.count_documents({})
-        existing_public_incidents = incidents_collection.count_documents({})
-        existing_officers = police_officers_collection.count_documents({})
-        existing_assigned_cases = assigned_cases_collection.count_documents({})
-        
-        print(f"📊 Current database state:")
-        print(f"   👮 POLICE Users: {existing_police_users}")
-        print(f"   🚨 Police Incidents: {existing_police_incidents}")
-        print(f"   📱 Public Incidents: {existing_public_incidents}")
-        print(f"   👥 Police Officers: {existing_officers}")
-        print(f"   📋 Assigned Cases: {existing_assigned_cases}")
-        
-    except Exception as e:
-        print(f"❌ Error initializing database: {e}")
-        # Don't crash the app, just log the error
-        import traceback
-        traceback.print_exc()
-@app.route('/debug/resolved-cases')
-@login_required
-def debug_resolved_cases():
-    """Debug route to see resolved cases data"""
-    try:
-        resolved_cases = list(db.resolved_cases.find())
-        
-        result = {
-            'total_resolved_cases': len(resolved_cases),
-            'resolved_cases_data': []
-        }
-        
-        for case in resolved_cases:
-            result['resolved_cases_data'].append({
-                'id': str(case.get('_id')),
-                'incident_id': case.get('incident_id'),
-                'title': case.get('title'),
-                'incident_type': case.get('incident_type'),
-                'severity': case.get('severity'),
-                'address': case.get('address'),
-                'resolved_by': case.get('resolved_by'),
-                'resolved_at': case.get('resolved_at'),
-                'has_incident_data': 'incident_data' in case,
-                'incident_data_keys': list(case.get('incident_data', {}).keys()) if case.get('incident_data') else []
-            })
-        
-        return jsonify(result)
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-    
-@app.route('/debug/incident-counts')
-@login_required
-def debug_incident_counts():
-    """Debug route to see exact incident counts in all collections"""
-    try:
-        # Get all incidents from all collections
-        police_incidents = list(incidents_police_collection.find())
-        public_incidents = list(incidents_collection.find())
-        resolved_cases = list(db.resolved_cases.find())
-        assigned_cases = list(assigned_cases_collection.find())
-        
-        # Count by status for police incidents
-        police_active = incidents_police_collection.count_documents({'status': 'active'})
-        police_resolved = incidents_police_collection.count_documents({'status': 'resolved'})
-        police_pending = incidents_police_collection.count_documents({'status': 'pending'})
-        
-        # Count by status for public incidents
-        public_active = incidents_collection.count_documents({'status': 'active'})
-        public_resolved = incidents_collection.count_documents({'status': 'resolved'})
-        public_pending = incidents_collection.count_documents({'status': 'pending'})
-        
-        # Show sample data
-        police_sample = list(incidents_police_collection.find().limit(3))
-        public_sample = list(incidents_collection.find().limit(3))
-        resolved_sample = list(db.resolved_cases.find().limit(3))
-        assigned_sample = list(assigned_cases_collection.find().limit(3))
-        
-        return jsonify({
-            'counts': {
-                'police_incidents_total': len(police_incidents),
-                'public_incidents_total': len(public_incidents),
-                'resolved_cases_total': len(resolved_cases),
-                'assigned_cases_total': len(assigned_cases),
-                'calculated_total': len(police_incidents) + len(public_incidents) + len(resolved_cases),
-                'police_by_status': {
-                    'active': police_active,
-                    'resolved': police_resolved,
-                    'pending': police_pending
-                },
-                'public_by_status': {
-                    'active': public_active,
-                    'resolved': public_resolved,
-                    'pending': public_pending
-                }
-            },
-            'samples': {
-                'police_incidents': police_sample,
-                'public_incidents': public_sample,
-                'resolved_cases': resolved_sample,
-                'assigned_cases': assigned_sample
-            }
-        })
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
 if __name__ == '__main__':
-    print("🚀 Starting SwiftAid Police Dashboard...")
-    print("📍 Karnataka Police Stations Network")
-    print("=" * 50)
-    init_db()
-    print("=" * 50)
-    print("🌐 Starting Flask server on http://127.0.0.1:5000")
-    print("🔐 Register police stations at /register")
-    print("🐛 Debug routes available at /debug/database, /debug/incidents-data, /test-incidents")
+    print("🚀 Starting SwiftAid Police Dashboard with Full Station Database...")
     app.run(debug=True)

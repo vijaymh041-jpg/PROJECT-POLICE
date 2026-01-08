@@ -1,482 +1,168 @@
 :root {
+    /* --- ORIGINAL BLUE THEME VARIABLES --- */
     --police-primary: #0d6efd;
     --police-secondary: #034bb3;
     --police-accent: #ffc107;
-    --police-dark: #212529;
-    --police-light: #f8f9fa;
-    --police-gray: #6c757d;
-    --police-success: #198754;
-    --police-danger: #dc3545;
-    --police-warning: #ffc107;
-    --police-info: #0dcaf0;
+    
+    /* Light Mode Defaults */
+    --bg-body: #f8f9fa;
+    --bg-card: #ffffff;
+    --text-main: #212529;
+    --text-muted: #6c757d;
+    --border-color: #dee2e6;
+    --input-bg: #ffffff;
+    --input-color: #212529;
 }
 
-* {
-    box-sizing: border-box;
+/* --- DARK MODE OVERRIDES --- */
+[data-theme="dark"] {
+    --bg-body: #121212;
+    --bg-card: #1e1e1e;
+    
+    /* Text Colors: Turn Black to White/Gray */
+    --text-main: #e0e0e0;
+    --text-muted: #b0b0b0;
+    
+    --border-color: #333;
+    
+    /* Dark Mode Inputs */
+    --input-bg: #2d2d2d;
+    --input-color: #ffffff;
 }
+
+/* --- TEXT VISIBILITY FIXES FOR DARK MODE --- */
+/* Forces text to be visible when background is dark */
+[data-theme="dark"] .text-primary { color: #6ea8fe !important; }
+[data-theme="dark"] .text-secondary { color: #a0a0a0 !important; }
+[data-theme="dark"] .text-success { color: #75b798 !important; }
+[data-theme="dark"] .text-danger { color: #ea868f !important; }
+[data-theme="dark"] .text-warning { color: #ffda6a !important; }
+[data-theme="dark"] .text-info { color: #6edff6 !important; }
+[data-theme="dark"] .text-dark { color: #f8f9fa !important; }
+
+/* Ensure Headers and Stats are White in Dark Mode */
+[data-theme="dark"] h1, [data-theme="dark"] h2, [data-theme="dark"] h3, 
+[data-theme="dark"] h4, [data-theme="dark"] h5, [data-theme="dark"] h6 {
+    color: #ffffff !important;
+}
+
+/* --- COMPONENT STYLES --- */
 
 body {
-    background-color: #f8f9fa;
+    background-color: var(--bg-body);
+    color: var(--text-main);
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    color: var(--police-dark);
     line-height: 1.6;
-    margin: 0;
-    padding: 0;
+    transition: background-color 0.3s, color 0.3s;
 }
 
+/* Navbar - ALWAYS BLUE */
 .navbar-police {
-    background-color: var(--police-primary);
+    background-color: var(--police-primary) !important;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.navbar-brand {
-    font-weight: 600;
-    font-size: 1.4rem;
+.navbar-brand, .nav-link {
+    color: white !important;
 }
 
-.sidebar {
-    background-color: white;
-    min-height: calc(100vh - 56px);
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-    position: sticky;
-    top: 56px;
-}
-
-.sidebar .nav-link {
-    color: #495057;
-    border-radius: 0;
-    padding: 0.8rem 1rem;
-    transition: all 0.3s ease;
-    font-weight: 500;
-    border-left: 3px solid transparent;
-    text-decoration: none;
-}
-
-.sidebar .nav-link:hover,
-.sidebar .nav-link:focus {
-    background-color: #e9ecef;
-    color: var(--police-primary);
-    border-left-color: var(--police-primary);
-    outline: none;
-}
-
-.sidebar .nav-link.active {
-    background-color: var(--police-primary);
-    color: white;
-    border-left-color: var(--police-accent);
-}
-
-.sidebar .nav-link i {
-    margin-right: 10px;
-    width: 20px;
-    text-align: center;
-}
-
-.card-police {
-    border-left: 4px solid var(--police-primary);
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
+/* Cards - Clean & White (or Dark Gray in Dark Mode) */
+.card, .card-police {
+    background-color: var(--bg-card);
+    border: 1px solid var(--border-color);
+    color: var(--text-main);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
     border-radius: 8px;
-    overflow: hidden;
-    height: 100%;
-    border: 1px solid #dee2e6;
 }
 
-.card-police:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+.card-header {
+    background-color: var(--bg-card) !important;
+    border-bottom: 1px solid var(--border-color);
+    color: var(--text-main);
+    font-weight: 600;
 }
 
+/* --- STATS CARDS (Matching your Screenshots) --- */
 .stats-card {
     text-align: center;
     padding: 20px;
+    background-color: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    transition: transform 0.2s;
+}
+
+/* Remove colored borders to match the clean white look in screenshots */
+.stats-card.assigned-stats, .stats-card.unassigned-stats {
+    border-left: 1px solid var(--border-color) !important;
 }
 
 .stats-card i {
-    font-size: 2.5rem;
-    margin-bottom: 15px;
-    color: var(--police-primary);
+    font-size: 2rem;
+    margin-bottom: 10px;
+    /* Icons keep their colors */
 }
 
 .stats-card h3 {
     font-size: 2rem;
-    margin-bottom: 0;
+    margin-bottom: 5px;
     font-weight: 700;
 }
 
-.stats-card p {
-    color: var(--police-gray);
-    margin-bottom: 0;
-    font-size: 0.9rem;
+/* --- TABLE STYLES --- */
+.table {
+    color: var(--text-main);
+    border-color: var(--border-color);
 }
 
-.map-container {
-    height: 400px;
-    border-radius: 8px;
-    overflow: hidden;
+.table > :not(caption) > * > * {
+    background-color: var(--bg-card);
+    color: var(--text-main);
+    border-bottom-color: var(--border-color);
 }
 
-.notification-badge {
-    position: absolute;
-    top: -5px;
-    right: -5px;
-    background-color: var(--police-danger);
-    color: white;
-    border-radius: 50%;
-    width: 20px;
-    height: 20px;
-    font-size: 0.7rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: bold;
+/* Dark mode specific table fixes */
+[data-theme="dark"] .table-hover > tbody > tr:hover > * {
+    background-color: #333;
 }
 
-.btn-police {
-    background-color: var(--police-primary);
-    border-color: var(--police-primary);
-    color: white;
-    font-weight: 500;
-    transition: all 0.3s ease;
-    cursor: pointer;
-}
-
-.btn-police:hover,
-.btn-police:focus {
-    background-color: var(--police-secondary);
-    border-color: var(--police-secondary);
-    color: white;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    outline: none;
-}
-
-/* Auth Pages Styling */
-.auth-container {
-    min-height: calc(100vh - 76px);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    padding: 1rem;
-}
-
-.auth-card {
-    background: white;
-    border-radius: 15px;
-    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
-    border: none;
-    width: 100%;
-    max-width: 500px;
-}
-
-.auth-header {
-    background: linear-gradient(135deg, var(--police-primary), var(--police-secondary));
-    color: white;
-    padding: 2rem;
-    text-align: center;
-    border-radius: 15px 15px 0 0;
-}
-
-.auth-body {
-    padding: 2rem;
-}
-
-/* Responsive adjustments */
-@media (max-width: 768px) {
-    .sidebar {
-        min-height: auto;
-        position: static;
-    }
-    
-    .stats-card {
-        padding: 15px;
-    }
-    
-    .stats-card h3 {
-        font-size: 1.5rem;
-    }
-    
-    .stats-card i {
-        font-size: 2rem;
-    }
-    
-    .map-container {
-        height: 300px;
-    }
-    
-    .auth-container {
-        padding: 0.5rem;
-    }
-    
-    .auth-body {
-        padding: 1.5rem;
-    }
-}
-
-@media (max-width: 576px) {
-    .auth-body {
-        padding: 1rem;
-    }
-    
-    .auth-header {
-        padding: 1.5rem;
-    }
-}
-
-/* Map marker styles */
-.map-marker {
-    font-size: 20px;
-    text-align: center;
-    text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
-}
-
-.custom-marker {
-    background: transparent;
-    border: none;
-}
-
-.update-item {
-    background-color: #f8f9fa;
-    border-left-width: 4px !important;
-}
-
-.live-updates-container {
-    max-height: 200px;
-    overflow-y: auto;
-}
-
-/* Additional styles for new features */
-
-/* Avatar circles */
-.avatar-circle {
-    width: 40px;
-    height: 40px;
-    background-color: var(--police-primary);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    font-weight: bold;
-}
-
-.avatar-circle-large {
-    width: 100px;
-    height: 100px;
-    background-color: var(--police-primary);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    font-size: 2rem;
-    font-weight: bold;
-}
-
-.initials {
-    color: white;
-    font-size: 0.9rem;
-}
-
-.initials-large {
-    color: white;
-}
-
-/* Form enhancements */
-.form-label {
-    font-weight: 500;
-    color: #333;
+/* Inputs */
+.form-control, .form-select {
+    background-color: var(--input-bg);
+    color: var(--input-color);
+    border: 1px solid var(--border-color);
 }
 
 .form-control:focus {
     border-color: var(--police-primary);
-    box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+    background-color: var(--input-bg);
+    color: var(--input-color);
 }
 
-/* Profile page specific */
-.profile-stats .stat-card {
-    border: 1px solid #dee2e6;
-    border-radius: 8px;
-    padding: 15px;
-    text-align: center;
-    transition: all 0.3s ease;
-}
-
-.profile-stats .stat-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-}
-
-/* Auth links */
-.auth-links {
-    text-align: center;
-    margin-top: 1.5rem;
-}
-
-.auth-links a {
-    color: var(--police-primary);
-    text-decoration: none;
-    font-weight: 500;
-}
-
-.auth-links a:hover,
-.auth-links a:focus {
-    color: var(--police-secondary);
-    text-decoration: underline;
-    outline: none;
-}
-
-/* Dropdown enhancements */
-.dropdown-menu {
-    border: none;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-}
-
-.dropdown-item {
-    padding: 0.5rem 1rem;
-    cursor: pointer;
-}
-
-.dropdown-item:hover,
-.dropdown-item:focus {
-    background-color: #f8f9fa;
-    color: var(--police-primary);
-    outline: none;
-}
-
-/* Alert enhancements */
-.alert {
-    border: none;
-    border-radius: 8px;
-    padding: 1rem;
-}
-
-.alert-success {
-    background-color: #d1e7dd;
-    color: #0f5132;
-    border: 1px solid #badbcc;
-}
-
-.alert-danger {
-    background-color: #f8d7da;
-    color: #721c24;
-    border: 1px solid #f1aeb5;
-}
-
-.alert-info {
-    background-color: #cff4fc;
-    color: #055160;
-    border: 1px solid #9eeaf9;
-}
-
-.alert-warning {
-    background-color: #fff3cd;
-    color: #664d03;
-    border: 1px solid #ffecb5;
-}
-
-/* Registration info cards */
-.registration-benefits li {
-    padding: 0.5rem 0;
-    border-bottom: 1px solid #eee;
-}
-
-.registration-benefits li:last-child {
-    border-bottom: none;
-}
-
-/* Print styles */
-@media print {
-    .navbar-police,
-    .sidebar,
-    .btn-police {
-        display: none !important;
-    }
-    
-    .card-police {
-        box-shadow: none;
-        border: 1px solid #000;
-    }
-}
-
-/* Reduced motion support */
-@media (prefers-reduced-motion: reduce) {
-    .card-police,
-    .btn-police,
-    .sidebar .nav-link,
-    .profile-stats .stat-card {
-        transition: none;
-    }
-    
-    .card-police:hover,
-    .btn-police:hover {
-        transform: none;
-    }
-}
-
-/* High contrast mode support */
-@media (prefers-contrast: high) {
-    .card-police {
-        border: 2px solid #000;
-    }
-    
-    .sidebar .nav-link {
-        border-left-width: 4px;
-    }
-}
-/* Assignment Status Styles */
-.unassigned-incident {
-    background-color: #fff5f5 !important;
-    border-left: 4px solid #dc3545 !important;
-}
-
-.assigned-incident {
-    background-color: #ffffff !important;
-    border-left: 4px solid #198754 !important;
-}
-
-.incident-row:hover {
-    transform: translateX(5px);
-    transition: transform 0.2s ease;
-}
-
-.assignment-status {
-    text-align: center;
-}
-
-.assigned-badge, .unassigned-badge {
-    font-size: 0.75rem;
-    padding: 0.35em 0.65em;
-}
-
-/* Stats card colors for assignment */
-.assigned-stats {
-    border-left: 4px solid #198754 !important;
-}
-
-.assigned-stats i {
-    color: #198754 !important;
-}
-
-.unassigned-stats {
-    border-left: 4px solid #dc3545 !important;
-}
-
-.unassigned-stats i {
-    color: #dc3545 !important;
-}
-
-/* Highlight unassigned incidents */
-.unassigned-incident td:first-child {
-    border-left: 4px solid #dc3545;
-}
-
-.assigned-incident td:first-child {
-    border-left: 4px solid #198754;
-}
-
-/* Assignment filter buttons */
-.btn-assignment-filter.active {
-    background-color: #0d6efd;
+/* Buttons */
+.btn-police {
+    background-color: var(--police-primary);
     color: white;
+    border: none;
+}
+.btn-police:hover {
+    background-color: var(--police-secondary);
+    color: white;
+}
+
+/* Assignment Badges */
+.unassigned-incident {
+    border-left: 4px solid #dc3545 !important;
+}
+.assigned-incident {
+    border-left: 4px solid #198754 !important;
+}
+
+/* Map */
+.map-container {
+    height: 400px;
+    width: 100%;
+    border-radius: 4px;
+    z-index: 1;
 }
